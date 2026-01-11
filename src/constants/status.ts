@@ -1,0 +1,46 @@
+import { BookStatus, Priority, BookCondition } from '../types';
+
+export const STATUS_LABELS: Record<BookStatus, string> = {
+  unread: '積読',
+  reading: '読書中',
+  paused: '中断',
+  completed: '読了',
+};
+
+export const STATUS_ICONS: Record<BookStatus, string> = {
+  unread: 'book-multiple',
+  reading: 'book-open-page-variant',
+  paused: 'pause-circle',
+  completed: 'check-circle',
+};
+
+export const STATUS_COLORS: Record<BookStatus, string> = {
+  unread: '#FF9800',
+  reading: '#2196F3',
+  paused: '#9E9E9E',
+  completed: '#4CAF50',
+};
+
+export const PRIORITY_LABELS: Record<Priority, string> = {
+  high: '高',
+  medium: '中',
+  low: '低',
+};
+
+export const PRIORITY_COLORS: Record<Priority, string> = {
+  high: '#F44336',
+  medium: '#FF9800',
+  low: '#4CAF50',
+};
+
+export const CONDITION_LABELS: Record<BookCondition, string> = {
+  new: '新刊',
+  used: '古本',
+  other: 'その他',
+};
+
+export const CONDITION_COLORS: Record<BookCondition, string> = {
+  new: '#2196F3',
+  used: '#795548',
+  other: '#9E9E9E',
+};
