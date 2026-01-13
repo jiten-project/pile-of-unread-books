@@ -15,6 +15,7 @@ import { usePersistBook } from '../hooks';
 import { BookStatus, Priority, BookCondition, RootStackNavigationProp } from '../types';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
 import { useTheme } from '../contexts';
+import { parsePrice } from '../utils';
 
 interface FormData {
   title: string;
@@ -129,7 +130,7 @@ export default function AddBookScreen() {
         priority: formData.priority,
         condition: formData.condition,
         purchasePlace: formData.purchasePlace.trim() || undefined,
-        purchasePrice: formData.purchasePrice ? Number(formData.purchasePrice) : undefined,
+        purchasePrice: parsePrice(formData.purchasePrice),
         purchaseReason: formData.purchaseReason.trim() || undefined,
         purchaseDate: new Date().toISOString(),
         tags: formData.tags,

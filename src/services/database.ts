@@ -174,6 +174,14 @@ export async function deleteBook(id: string): Promise<void> {
   await db.runAsync('DELETE FROM books WHERE id = ?', [id]);
 }
 
+export async function deleteAllBooks(): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  await db.runAsync('DELETE FROM books');
+}
+
 function rowToBook(row: Record<string, unknown>): Book {
   return {
     id: row.id as string,

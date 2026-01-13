@@ -145,6 +145,13 @@ export default function BookDetailScreen() {
         </View>
       </View>
 
+      {book.purchaseReason && (
+        <View style={[styles.section, themedStyles.section]}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>📝 購入動機</Text>
+          <Text style={[styles.noteText, themedStyles.noteText]}>{book.purchaseReason}</Text>
+        </View>
+      )}
+
       <View style={[styles.section, themedStyles.section]}>
         <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>書籍情報</Text>
         <InfoRow label="ISBN" value={book.isbn || '-'} colors={colors} />
@@ -163,12 +170,6 @@ export default function BookDetailScreen() {
         <InfoRow label="購入日" value={formatDate(book.purchaseDate)} colors={colors} />
         <InfoRow label="購入場所" value={book.purchasePlace || '-'} colors={colors} />
         <InfoRow label="購入価格" value={formatPrice(book.purchasePrice)} colors={colors} />
-        {book.purchaseReason && (
-          <>
-            <Text style={[styles.subLabel, themedStyles.subLabel]}>購入動機</Text>
-            <Text style={[styles.noteText, themedStyles.noteText]}>{book.purchaseReason}</Text>
-          </>
-        )}
       </View>
 
       {book.tags.length > 0 && (
@@ -186,7 +187,7 @@ export default function BookDetailScreen() {
 
       {book.notes && (
         <View style={[styles.section, themedStyles.section]}>
-          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>メモ</Text>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>📄 メモ</Text>
           <Text style={[styles.noteText, themedStyles.noteText]}>{book.notes}</Text>
         </View>
       )}

@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { exportBooks, importBooks } from '../services';
-import { insertBook, getAllBooks } from '../services/database';
+import { insertBook, getAllBooks, deleteAllBooks } from '../services/database';
 import { AppNavigationProp } from '../types';
 import { useTheme, ThemeMode, useSettings, TSUNDOKU_PRESETS, TsundokuPresetKey } from '../contexts';
 
@@ -117,14 +117,14 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // 全削除の実装は簡略化（各本を個別に削除）
-              const { deleteBook } = useBookStore.getState();
-              for (const book of books) {
-                deleteBook(book.id);
-              }
+              // データベースから全削除
+              await deleteAllBooks();
+              // メモリ上のストアもクリア
+              setBooks([]);
               Alert.alert('完了', 'すべてのデータを削除しました');
             } catch (error) {
               Alert.alert('エラー', 'データの削除に失敗しました');
+              console.error(error);
             }
           },
         },
