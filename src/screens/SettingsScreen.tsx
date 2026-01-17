@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { exportBooks, importBooks } from '../services';
-import { insertBook, getAllBooks, deleteAllBooks } from '../services/database';
+import { insertBooksInTransaction, getAllBooks, deleteAllBooks } from '../services/database';
 import { AppNavigationProp } from '../types';
 import { useTheme, ThemeMode, useSettings, TSUNDOKU_PRESETS, TsundokuPresetKey } from '../contexts';
 
@@ -68,7 +68,7 @@ export default function SettingsScreen() {
               // 既存のIDを取得
               const existingIds = new Set(books.map(b => b.id));
 
-              // インポート処理
+              // インポート処理（カウント計算）
               let addedCount = 0;
               let updatedCount = 0;
 
@@ -78,8 +78,10 @@ export default function SettingsScreen() {
                 } else {
                   addedCount++;
                 }
-                await insertBook(book);
               }
+
+              // トランザクションで一括挿入（パフォーマンス向上）
+              await insertBooksInTransaction(importedBooks);
 
               // ストアを更新
               const allBooks = await getAllBooks();
