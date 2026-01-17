@@ -44,6 +44,7 @@ export const useBookStore = create<BookState>((set, get) => ({
       categories: input.categories,
       status: input.status ?? 'unread',
       priority: input.priority ?? 'medium',
+      condition: input.condition ?? 'new',
       purchaseDate: input.purchaseDate,
       purchasePlace: input.purchasePlace,
       purchasePrice: input.purchasePrice,

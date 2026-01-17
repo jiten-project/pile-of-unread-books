@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プライバシーポリシー - 積読本管理</title>
+  <meta name="description" content="積読本管理アプリのプライバシーポリシー。データの取り扱いについて説明します。">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      line-height: 1.8;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0066CC, #0A84FF);
+      color: white;
+      padding: 30px 20px;
+    }
+
+    header .container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .back-link {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+    }
+
+    header h1 {
+      font-size: 24px;
+    }
+
+    main {
+      padding: 40px 0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .last-updated {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section h2 {
+      color: #0066CC;
+      font-size: 18px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e3f2fd;
+    }
+
+    .section p {
+      color: #555;
+      font-size: 15px;
+    }
+
+    .section ul {
+      margin: 10px 0;
+      padding-left: 20px;
+      color: #555;
+    }
+
+    .section li {
+      margin-bottom: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #0066CC;
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 20px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .section h2 {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="index.html" class="back-link">←</a>
+      <h1>プライバシーポリシー</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <p class="last-updated">最終更新日: 2025年1月17日</p>
+
+      <div class="section">
+        <h2>はじめに</h2>
+        <p>
+          本アプリケーション「積読本管理」（以下「本アプリ」）は、ユーザーのプライバシーを尊重し、個人情報の保護に努めます。本プライバシーポリシーでは、本アプリにおけるデータの取り扱いについて説明します。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>収集する情報</h2>
+        <p>本アプリは、以下の情報をユーザーのデバイス内にのみ保存します。</p>
+        <ul>
+          <li>書籍情報（タイトル、著者、ISBN等）</li>
+          <li>読書状況（ステータス、読書日時等）</li>
+          <li>アプリ設定（テーマ、通知設定等）</li>
+        </ul>
+        <p>これらの情報は外部サーバーには送信されません。</p>
+      </div>
+
+      <div class="section">
+        <h2>外部サービスとの連携</h2>
+        <p>
+          本アプリは、書籍情報の取得のために以下のAPIを利用する場合があります。
+        </p>
+        <ul>
+          <li>OpenBD API（日本の書籍情報）</li>
+          <li>Google Books API（海外の書籍情報）</li>
+        </ul>
+        <p>
+          この際、ISBN番号のみが送信され、個人を特定する情報は送信されません。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>カメラの使用</h2>
+        <p>
+          本アプリは、バーコードスキャン機能のためにカメラへのアクセスを要求する場合があります。カメラで取得した画像は、バーコード読み取りのためにのみ使用され、保存や外部送信は行われません。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>通知</h2>
+        <p>
+          本アプリは、読書リマインダー機能のためにローカル通知を使用する場合があります。通知はデバイス内で完結し、外部サーバーとの通信は行われません。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>データの保存と削除</h2>
+        <p>
+          すべてのデータはユーザーのデバイス内にのみ保存されます。アプリをアンインストールすると、保存されたデータはすべて削除されます。また、設定画面からデータを手動で削除することも可能です。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>第三者への情報提供</h2>
+        <p>
+          本アプリは、ユーザーの個人情報を第三者に提供、販売、共有することはありません。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>お子様のプライバシー</h2>
+        <p>
+          本アプリは年齢制限を設けておらず、個人情報を収集しないため、お子様も安心してご利用いただけます。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>プライバシーポリシーの変更</h2>
+        <p>
+          本プライバシーポリシーは、必要に応じて変更される場合があります。変更があった場合は、本ページおよびアプリ内で通知します。
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>お問い合わせ</h2>
+        <p>
+          プライバシーに関するご質問やご懸念がある場合は、<a href="index.html#support">サポートページ</a>からお問い合わせください。
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p><a href="index.html">← トップに戻る</a></p>
+    <p style="margin-top: 10px;">&copy; 2024 積読本管理. All rights reserved.</p>
+  </footer>
+</body>
+</html>

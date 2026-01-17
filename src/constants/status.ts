@@ -36,11 +36,13 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 export const CONDITION_LABELS: Record<BookCondition, string> = {
   new: '新刊',
   used: '古本',
+  ebook: '電子書籍',
   other: 'その他',
 };
 
 export const CONDITION_COLORS: Record<BookCondition, string> = {
   new: '#2196F3',
   used: '#795548',
+  ebook: '#00BCD4',
   other: '#9E9E9E',
 };

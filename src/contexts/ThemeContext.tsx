@@ -20,6 +20,7 @@ export interface ThemeColors {
   textPrimary: string;
   textSecondary: string;
   textTertiary: string;
+  textOnPrimary: string; // プライマリカラー上のテキスト用
 
   // ボーダー
   border: string;
@@ -48,6 +49,7 @@ export const lightTheme: ThemeColors = {
   textPrimary: '#1a1a1a',
   textSecondary: '#555',
   textTertiary: '#777',
+  textOnPrimary: '#fff',
   border: '#d0d0d0',
   borderLight: '#e8e8e8',
   error: '#D32F2F',
@@ -68,6 +70,7 @@ export const darkTheme: ThemeColors = {
   textPrimary: '#f5f5f5',
   textSecondary: '#c0c0c0',
   textTertiary: '#a0a0a0',
+  textOnPrimary: '#fff',
   border: '#3c3c3c',
   borderLight: '#2c2c2c',
   error: '#FF6B6B',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Modal,
   ScrollView,
@@ -43,6 +43,13 @@ export default function FilterModal({
 }: FilterModalProps) {
   const { colors } = useTheme();
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
+
+  // モーダルが開かれたときにpropsのfiltersと同期
+  useEffect(() => {
+    if (visible) {
+      setLocalFilters(filters);
+    }
+  }, [visible, filters]);
 
   const handleStatusToggle = (status: BookStatus) => {
     setLocalFilters(prev => {
@@ -151,7 +158,7 @@ export default function FilterModal({
                         style={[
                           styles.chipText,
                           themedStyles.chipText,
-                          isSelected && styles.chipTextSelected,
+                          isSelected && [styles.chipTextSelected, { color: colors.textOnPrimary }],
                         ]}
                       >
                         {STATUS_LABELS[status]}
@@ -181,7 +188,7 @@ export default function FilterModal({
                         style={[
                           styles.chipText,
                           themedStyles.chipText,
-                          isSelected && styles.chipTextSelected,
+                          isSelected && [styles.chipTextSelected, { color: colors.textOnPrimary }],
                         ]}
                       >
                         {PRIORITY_LABELS[priority]}
@@ -274,7 +281,7 @@ export default function FilterModal({
               style={[styles.applyButton, { backgroundColor: colors.primary }]}
               onPress={handleApply}
             >
-              <Text style={styles.applyButtonText}>適用</Text>
+              <Text style={[styles.applyButtonText, { color: colors.textOnPrimary }]}>適用</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -333,7 +340,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   chipTextSelected: {
-    color: '#fff',
     fontWeight: '600',
   },
   sortContainer: {
@@ -377,7 +383,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

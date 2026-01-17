@@ -16,6 +16,7 @@ import { useBookStore } from '../store';
 import { BookStatus, Priority, BookCondition, RootStackParamList, RootStackNavigationProp } from '../types';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
 import { useTheme } from '../contexts';
+import { parsePrice } from '../utils';
 
 type BookEditRouteProp = RouteProp<RootStackParamList, 'BookEdit'>;
 
@@ -161,7 +162,7 @@ export default function BookEditScreen() {
         priority: formData.priority,
         condition: formData.condition,
         purchasePlace: formData.purchasePlace.trim() || undefined,
-        purchasePrice: formData.purchasePrice ? Number(formData.purchasePrice) : undefined,
+        purchasePrice: parsePrice(formData.purchasePrice),
         purchaseReason: formData.purchaseReason.trim() || undefined,
         tags: formData.tags,
         notes: formData.notes.trim() || undefined,

@@ -1,0 +1,235 @@
+diff --git a/node_modules/react-native/scripts/ios-configure-glog.sh b/node_modules/react-native/scripts/ios-configure-glog.sh
+index 81eb319..c103ac1 100755
+--- a/node_modules/react-native/scripts/ios-configure-glog.sh
++++ b/node_modules/react-native/scripts/ios-configure-glog.sh
+@@ -10,9 +10,6 @@ PLATFORM_NAME="${PLATFORM_NAME:-iphoneos}"
+ CURRENT_ARCH="${CURRENT_ARCH}"
+ 
+ if [ -z "$CURRENT_ARCH" ] || [ "$CURRENT_ARCH" == "undefined_arch" ]; then
+-    # Xcode 10 beta sets CURRENT_ARCH to "undefined_arch", this leads to incorrect linker arg.
+-    # it's better to rely on platform name as fallback because architecture differs between simulator and device
+-
+     if [[ "$PLATFORM_NAME" == *"simulator"* ]]; then
+         CURRENT_ARCH="x86_64"
+     else
+@@ -39,31 +36,155 @@ index 1761d8b..43fa2e8 100755
+  		os=-none
+ EOF
+ 
+-    patch -p1 config.sub fix_glog_0.3.5_apple_silicon.patch
+-fi
+-
+-XCRUN="$(which xcrun || true)"
+-if [ -n "$XCRUN" ]; then
+-  export CC="$(xcrun -find -sdk $PLATFORM_NAME cc) -arch $CURRENT_ARCH -isysroot $(xcrun -sdk $PLATFORM_NAME --show-sdk-path)"
+-  export CXX="$CC"
+-else
+-  export CC="$CC:-$(which gcc)"
+-  export CXX="$CXX:-$(which g++ || true)"
+-fi
+-export CXX="$CXX:-$CC"
+-
+-# Remove automake symlink if it exists
+-if [ -h "test-driver" ]; then
+-    rm test-driver
++    patch -p1 config.sub fix_glog_0.3.5_apple_silicon.patch || true
+ fi
+ 
+ # Manually disable gflags include to fix issue https://github.com/facebook/react-native/issues/28446
+ sed -i.bak -e 's/\@ac_cv_have_libgflags\@/0/' src/glog/logging.h.in && rm src/glog/logging.h.in.bak
+ sed -i.bak -e 's/HAVE_LIB_GFLAGS/HAVE_LIB_GFLAGS_DISABLED/' src/config.h.in && rm src/config.h.in.bak
+ 
+-./configure --host arm-apple-darwin || true
++# Create pre-generated config.h instead of running configure (which hangs)
++cat << 'CONFIGEOF' > src/config.h
++/* src/config.h.  Generated manually for arm64 iOS.  */
++
++/* Namespace for Google classes */
++#define GOOGLE_NAMESPACE google
++
++/* Define if you have the `dladdr' function */
++#define HAVE_DLADDR 1
++
++/* Define if you have the `snprintf' function */
++#define HAVE_SNPRINTF 1
++
++/* Define to 1 if you have the <dlfcn.h> header file. */
++#define HAVE_DLFCN_H 1
++
++/* Define to 1 if you have the <execinfo.h> header file. */
++#define HAVE_EXECINFO_H 1
++
++/* Define if you have the `fcntl' function */
++#define HAVE_FCNTL 1
++
++/* Define to 1 if you have the <glob.h> header file. */
++#define HAVE_GLOB_H 1
++
++/* Define to 1 if you have the <inttypes.h> header file. */
++#define HAVE_INTTYPES_H 1
++
++/* Define to 1 if you have the `pthread' library (-lpthread). */
++#define HAVE_LIBPTHREAD 1
++
++/* define if the compiler implements namespaces */
++#define HAVE_NAMESPACES 1
++
++/* Define if you have the 'pread' function */
++#define HAVE_PREAD 1
++
++/* Define if you have POSIX threads libraries and header files. */
++#define HAVE_PTHREAD 1
++
++/* Define to 1 if you have the <pwd.h> header file. */
++#define HAVE_PWD_H 1
++
++/* Define if you have the 'pwrite' function */
++#define HAVE_PWRITE 1
++
++/* define if the compiler implements pthread_rwlock_* */
++#define HAVE_RWLOCK 1
++
++/* Define if you have the 'sigaction' function */
++#define HAVE_SIGACTION 1
++
++/* Define if you have the `sigaltstack' function */
++#define HAVE_SIGALTSTACK 1
++
++/* Define to 1 if you have the <stdint.h> header file. */
++#define HAVE_STDINT_H 1
++
++/* Define to 1 if you have the <stdlib.h> header file. */
++#define HAVE_STDLIB_H 1
++
++/* Define to 1 if you have the <strings.h> header file. */
++#define HAVE_STRINGS_H 1
++
++/* Define to 1 if you have the <string.h> header file. */
++#define HAVE_STRING_H 1
++
++/* Define to 1 if you have the <syslog.h> header file. */
++#define HAVE_SYSLOG_H 1
++
++/* Define to 1 if you have the <sys/stat.h> header file. */
++#define HAVE_SYS_STAT_H 1
++
++/* Define to 1 if you have the <sys/syscall.h> header file. */
++#define HAVE_SYS_SYSCALL_H 1
++
++/* Define to 1 if you have the <sys/time.h> header file. */
++#define HAVE_SYS_TIME_H 1
++
++/* Define to 1 if you have the <sys/types.h> header file. */
++#define HAVE_SYS_TYPES_H 1
++
++/* Define to 1 if you have the <sys/utsname.h> header file. */
++#define HAVE_SYS_UTSNAME_H 1
++
++/* Define to 1 if you have the <unistd.h> header file. */
++#define HAVE_UNISTD_H 1
++
++/* Define to 1 if you have the <unwind.h> header file. */
++#define HAVE_UNWIND_H 1
++
++/* define if the compiler supports using expression for operator */
++#define HAVE_USING_OPERATOR 1
++
++/* define if your compiler has __attribute__ */
++#define HAVE___ATTRIBUTE__ 1
++
++/* define if your compiler has __builtin_expect */
++#define HAVE___BUILTIN_EXPECT 1
++
++/* define if your compiler has __sync_val_compare_and_swap */
++#define HAVE___SYNC_VAL_COMPARE_AND_SWAP 1
++
++/* Define to the sub-directory in which libtool stores uninstalled libraries. */
++#define LT_OBJDIR ".libs/"
++
++/* Name of package */
++#define PACKAGE "glog"
++
++/* Define to the address where bug reports for this package should be sent. */
++#define PACKAGE_BUGREPORT "opensource@google.com"
++
++/* Define to the full name of this package. */
++#define PACKAGE_NAME "glog"
++
++/* Define to the full name and version of this package. */
++#define PACKAGE_STRING "glog 0.3.5"
++
++/* Define to the one symbol short name of this package. */
++#define PACKAGE_TARNAME "glog"
++
++/* Define to the version of this package. */
++#define PACKAGE_VERSION "0.3.5"
++
++/* The size of `void *', as computed by sizeof. */
++#define SIZEOF_VOID_P 8
++
++/* Define to 1 if you have the ANSI C header files. */
++#define STDC_HEADERS 1
++
++/* the namespace where STL code like vector<> is defined */
++#define STL_NAMESPACE std
++
++/* Version number of package */
++#define VERSION "0.3.5"
++
++/* Stops putting the code inside the Google namespace */
++#define _END_GOOGLE_NAMESPACE_ }
++
++/* Puts following code inside the Google namespace */
++#define _START_GOOGLE_NAMESPACE_ namespace google {
+ 
+-cat << EOF >> src/config.h
+ /* Add in so we have Apple Target Conditionals */
+ #ifdef __APPLE__
+ #include <TargetConditionals.h>
+@@ -75,7 +196,6 @@ cat << EOF >> src/config.h
+ #undef HAVE_SYSCALL_H
+ #undef HAVE_SYS_SYSCALL_H
+ #undef OS_MACOSX
+-/* NO_THREADS needed right now for Xcode 16 */
+ #define NO_THREADS
+ #endif
+ 
+@@ -87,7 +207,37 @@ cat << EOF >> src/config.h
+ #elif defined(__i386__)
+ #define PC_FROM_UCONTEXT uc_mcontext->__ss.__eip
+ #endif
+-EOF
++CONFIGEOF
++
++# Generate header files from .h.in templates
++generate_header() {
++    local input=$1
++    local output=$2
++    sed -e 's/@ac_cv_have_unistd_h@/1/g' \
++        -e 's/@ac_cv_have_stdint_h@/1/g' \
++        -e 's/@ac_cv_have_systypes_h@/1/g' \
++        -e 's/@ac_cv_have_inttypes_h@/1/g' \
++        -e 's/@ac_cv_have_libgflags@/0/g' \
++        -e 's/@ac_cv_have___uint16@/0/g' \
++        -e 's/@ac_cv_have_u_int16_t@/1/g' \
++        -e 's/@ac_cv_have_uint16_t@/1/g' \
++        -e 's/@ac_cv___attribute___noreturn@/__attribute__((noreturn))/g' \
++        -e 's/@ac_cv___attribute___noinline@/__attribute__((noinline))/g' \
++        -e 's/@ac_cv___attribute___printf_4_5@/__attribute__((__format__ (__printf__, 4, 5)))/g' \
++        -e 's/@ac_google_start_namespace@/namespace google {/g' \
++        -e 's/@ac_google_end_namespace@/}/g' \
++        -e 's/@ac_google_namespace@/google/g' \
++        -e 's/@ac_cv_cxx_using_operator@/1/g' \
++        -e 's/@ac_cv_have___builtin_expect@/1/g' \
++        -e 's/@ac_cv_have_mode_t@/1/g' \
++        "$input" > "$output"
++}
++
++# Generate the header files
++generate_header src/glog/logging.h.in src/glog/logging.h
++generate_header src/glog/raw_logging.h.in src/glog/raw_logging.h
++generate_header src/glog/stl_logging.h.in src/glog/stl_logging.h
++generate_header src/glog/vlog_is_on.h.in src/glog/vlog_is_on.h
+ 
+ # Prepare exported header include
+ EXPORTED_INCLUDE_DIR="exported/glog"

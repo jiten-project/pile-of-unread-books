@@ -21,6 +21,7 @@ export default function BookCard({ book, onPress }: BookCardProps) {
     tag: { backgroundColor: colors.primaryLight },
     tagText: { color: colors.primary },
     moreTags: { color: colors.textTertiary },
+    purchaseReason: { color: colors.textSecondary },
   };
 
   return (
@@ -67,6 +68,12 @@ export default function BookCard({ book, onPress }: BookCardProps) {
               <Text style={[styles.moreTags, themedStyles.moreTags]}>+{book.tags.length - 3}</Text>
             )}
           </View>
+        )}
+
+        {book.purchaseReason && (
+          <Text style={[styles.purchaseReason, themedStyles.purchaseReason]} numberOfLines={2}>
+            📝 {book.purchaseReason}
+          </Text>
         )}
       </View>
     </TouchableOpacity>
@@ -150,5 +157,10 @@ const styles = StyleSheet.create({
   },
   moreTags: {
     fontSize: 11,
+  },
+  purchaseReason: {
+    fontSize: 12,
+    marginTop: 6,
+    lineHeight: 16,
   },
 });
