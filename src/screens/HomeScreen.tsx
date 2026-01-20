@@ -4,9 +4,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { BookCard, EmptyState } from '../components';
 import { STATUS_LABELS, STATUS_COLORS } from '../constants';
+import { DEVICE } from '../constants/theme';
 import { AppNavigationProp } from '../types';
 import { getDaysSince, formatPrice, joinWithComma } from '../utils';
 import { useTheme, useSettings } from '../contexts';
+
+// iPad用スケールファクター
+const SCALE = DEVICE.isTablet ? 1.5 : 1.0;
 
 // 積読に関する名言・メッセージ
 const TSUNDOKU_MESSAGES = [
@@ -288,30 +292,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: Math.round(16 * SCALE),
+    paddingBottom: Math.round(40 * SCALE),
   },
   header: {
-    marginBottom: 20,
+    marginBottom: Math.round(20 * SCALE),
   },
   greeting: {
-    fontSize: 28,
+    fontSize: Math.round(28 * SCALE),
     fontWeight: 'bold',
   },
   total: {
-    fontSize: 14,
+    fontSize: Math.round(14 * SCALE),
     marginTop: 4,
   },
   quoteText: {
-    fontSize: 16,
+    fontSize: Math.round(16 * SCALE),
     fontStyle: 'italic',
-    marginTop: 12,
-    lineHeight: 24,
+    marginTop: Math.round(12 * SCALE),
+    lineHeight: Math.round(24 * SCALE),
   },
   tsundokuCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: Math.round(16 * SCALE),
+    padding: Math.round(20 * SCALE),
+    marginBottom: Math.round(16 * SCALE),
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -322,34 +326,35 @@ const styles = StyleSheet.create({
   tsundokuHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Math.round(8 * SCALE),
   },
   tsundokuIcon: {
-    fontSize: 24,
-    marginRight: 8,
+    fontSize: Math.round(24 * SCALE),
+    marginRight: Math.round(8 * SCALE),
   },
   tsundokuLabel: {
-    fontSize: 14,
+    fontSize: Math.round(14 * SCALE),
     fontWeight: '600',
   },
   tsundokuValue: {
-    fontSize: 48,
+    fontSize: Math.round(48 * SCALE),
     fontWeight: 'bold',
   },
   tsundokuUnit: {
-    fontSize: 20,
+    fontSize: Math.round(20 * SCALE),
     fontWeight: 'normal',
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 20,
+    justifyContent: 'space-between',
+    marginBottom: Math.round(20 * SCALE),
   },
   statCard: {
-    width: '47%',
-    borderRadius: 12,
-    padding: 16,
+    width: '48.5%',
+    marginBottom: Math.round(12 * SCALE),
+    borderRadius: Math.round(12 * SCALE),
+    padding: Math.round(16 * SCALE),
     borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -358,47 +363,47 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   statIcon: {
-    fontSize: 24,
-    marginBottom: 8,
+    fontSize: Math.round(24 * SCALE),
+    marginBottom: Math.round(8 * SCALE),
   },
   statValue: {
-    fontSize: 32,
+    fontSize: Math.round(32 * SCALE),
     fontWeight: 'bold',
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: Math.round(14 * SCALE),
     marginTop: 4,
   },
   priceCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: Math.round(12 * SCALE),
+    padding: Math.round(16 * SCALE),
+    marginBottom: Math.round(20 * SCALE),
     borderWidth: 1,
   },
   priceLabel: {
-    fontSize: 14,
+    fontSize: Math.round(14 * SCALE),
   },
   priceValue: {
-    fontSize: 28,
+    fontSize: Math.round(28 * SCALE),
     fontWeight: 'bold',
     marginTop: 4,
   },
   priceHint: {
-    fontSize: 12,
+    fontSize: Math.round(12 * SCALE),
     marginTop: 4,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: Math.round(20 * SCALE),
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: Math.round(18 * SCALE),
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: Math.round(12 * SCALE),
   },
   oldestCard: {
     flexDirection: 'row',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Math.round(12 * SCALE),
+    padding: Math.round(16 * SCALE),
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -410,25 +415,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   oldestTitle: {
-    fontSize: 16,
+    fontSize: Math.round(16 * SCALE),
     fontWeight: '600',
   },
   oldestAuthor: {
-    fontSize: 14,
+    fontSize: Math.round(14 * SCALE),
     marginTop: 2,
   },
   oldestDays: {
     alignItems: 'center',
-    marginLeft: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    marginLeft: Math.round(16 * SCALE),
+    paddingHorizontal: Math.round(16 * SCALE),
+    paddingVertical: Math.round(8 * SCALE),
+    borderRadius: Math.round(8 * SCALE),
   },
   oldestDaysValue: {
-    fontSize: 24,
+    fontSize: Math.round(24 * SCALE),
     fontWeight: 'bold',
   },
   oldestDaysLabel: {
-    fontSize: 12,
+    fontSize: Math.round(12 * SCALE),
   },
 });

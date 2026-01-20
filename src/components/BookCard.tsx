@@ -1,7 +1,11 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Book } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../constants';
+import { DEVICE } from '../constants/theme';
 import { useTheme } from '../contexts';
+
+// iPad用スケールファクター
+const SCALE = DEVICE.isTablet ? 1.5 : 1.0;
 
 interface BookCardProps {
   book: Book;
@@ -83,9 +87,9 @@ export default function BookCard({ book, onPress }: BookCardProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: Math.round(12 * SCALE),
+    padding: Math.round(12 * SCALE),
+    marginBottom: Math.round(12 * SCALE),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -93,9 +97,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   imageContainer: {
-    width: 80,
-    height: 120,
-    borderRadius: 6,
+    width: Math.round(80 * SCALE),
+    height: Math.round(120 * SCALE),
+    borderRadius: Math.round(6 * SCALE),
     overflow: 'hidden',
   },
   image: {
@@ -110,57 +114,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   placeholderText: {
-    fontSize: 10,
+    fontSize: Math.round(10 * SCALE),
   },
   content: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: Math.round(12 * SCALE),
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: 16,
+    fontSize: Math.round(16 * SCALE),
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: Math.round(4 * SCALE),
   },
   authors: {
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: Math.round(14 * SCALE),
+    marginBottom: Math.round(8 * SCALE),
   },
   badges: {
     flexDirection: 'row',
-    gap: 6,
-    marginBottom: 8,
+    gap: Math.round(6 * SCALE),
+    marginBottom: Math.round(8 * SCALE),
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    paddingHorizontal: Math.round(8 * SCALE),
+    paddingVertical: Math.round(2 * SCALE),
+    borderRadius: Math.round(10 * SCALE),
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: Math.round(11 * SCALE),
     color: '#fff',
     fontWeight: '600',
   },
   tags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 4,
+    gap: Math.round(4 * SCALE),
     alignItems: 'center',
   },
   tag: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: Math.round(8 * SCALE),
+    paddingVertical: Math.round(2 * SCALE),
+    borderRadius: Math.round(8 * SCALE),
   },
   tagText: {
-    fontSize: 11,
+    fontSize: Math.round(11 * SCALE),
   },
   moreTags: {
-    fontSize: 11,
+    fontSize: Math.round(11 * SCALE),
   },
   purchaseReason: {
-    fontSize: 12,
-    marginTop: 6,
-    lineHeight: 16,
+    fontSize: Math.round(12 * SCALE),
+    marginTop: Math.round(6 * SCALE),
+    lineHeight: Math.round(16 * SCALE),
   },
 });

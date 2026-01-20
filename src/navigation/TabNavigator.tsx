@@ -10,6 +10,7 @@ import {
 } from '../screens';
 import { useTheme } from '../contexts';
 import { TabParamList } from '../types';
+import { DEVICE } from '../constants/theme';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -31,6 +32,7 @@ function TabIcon({ label, icon, focused, focusedColor, unfocusedColor }: TabIcon
           { color: focused ? focusedColor : unfocusedColor },
           focused && styles.tabLabelFocused,
         ]}
+        numberOfLines={1}
       >
         {label}
       </Text>
@@ -48,16 +50,24 @@ function AddButton({ onPress, primaryColor }: AddButtonProps) {
   };
 
   return (
-    <TouchableOpacity
-      style={[styles.addButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
-      onPress={handlePress}
-      accessibilityLabel="本を登録する"
-      accessibilityRole="button"
-    >
-      <Text style={styles.addButtonText}>+</Text>
-    </TouchableOpacity>
+    <View style={styles.addButtonContainer}>
+      <TouchableOpacity
+        style={[styles.addButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
+        onPress={handlePress}
+        accessibilityLabel="本を登録する"
+        accessibilityRole="button"
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
+
+// タブバーのサイズ定数（TabNavigatorより前に定義）
+const TAB_SCALE = DEVICE.isTablet ? 1.5 : 1.0;
+const TAB_BAR_HEIGHT = Math.round(80 * TAB_SCALE);
+const TAB_BAR_PADDING_BOTTOM = 0;
+const TAB_BAR_PADDING_TOP = Math.round(32 * TAB_SCALE);
 
 export default function TabNavigator() {
   const { colors } = useTheme();
@@ -69,9 +79,9 @@ export default function TabNavigator() {
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.textPrimary,
         tabBarStyle: {
-          height: 80,
-          paddingBottom: 20,
-          paddingTop: 8,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: TAB_BAR_PADDING_BOTTOM,
+          paddingTop: TAB_BAR_PADDING_TOP,
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
@@ -155,38 +165,53 @@ export default function TabNavigator() {
   );
 }
 
+// タブアイコン・ボタンのサイズ（iPadの時だけ大きくする）
+const tabIconSize = Math.round(24 * TAB_SCALE);
+const tabLabelSize = Math.round(10 * TAB_SCALE);
+const tabLabelMarginTop = Math.round(4 * TAB_SCALE);
+const tabContainerMinWidth = Math.round(50 * TAB_SCALE);
+const addButtonSize = Math.round(56 * TAB_SCALE);
+const addButtonFontSize = Math.round(32 * TAB_SCALE);
+const addButtonMarginTop = Math.round(-20 * TAB_SCALE);
+
 const styles = StyleSheet.create({
   tabIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: tabContainerMinWidth,
   },
   tabIcon: {
-    fontSize: 24,
+    fontSize: tabIconSize,
   },
   tabIconFocused: {
     transform: [{ scale: 1.1 }],
   },
   tabLabel: {
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: tabLabelSize,
+    marginTop: tabLabelMarginTop,
   },
   tabLabelFocused: {
     fontWeight: '600',
   },
-  addButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  addButtonContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
+  },
+  addButton: {
+    width: addButtonSize,
+    height: addButtonSize,
+    borderRadius: addButtonSize / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: addButtonMarginTop,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
   addButtonText: {
-    fontSize: 32,
+    fontSize: addButtonFontSize,
     color: '#fff',
     fontWeight: '300',
     marginTop: -2,

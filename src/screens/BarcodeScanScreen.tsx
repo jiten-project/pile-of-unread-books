@@ -100,10 +100,10 @@ export default function BarcodeScanScreen() {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={requestPermission}
-          accessibilityLabel="カメラアクセスを許可する"
+          accessibilityLabel="次へ進む"
           accessibilityRole="button"
         >
-          <Text style={styles.buttonText}>カメラを許可する</Text>
+          <Text style={styles.buttonText}>次へ</Text>
         </TouchableOpacity>
       </View>
     );
