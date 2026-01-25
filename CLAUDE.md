@@ -69,3 +69,8 @@ src/
 - ESLint + Prettier enforced
 - Single quotes, semicolons, 2-space indentation
 - Trailing commas (es5 style)
+
+## 厳守するルール
+
+- 修正後には利用規約、プライバシーポリシー、免責事項に内容を正確に反映すしてください。
+- 同様にサポート用Webページの記載も修正を反映してください

@@ -164,6 +164,21 @@ export async function deleteBookFromCloud(bookId: string): Promise<void> {
 }
 
 /**
+ * クラウドから全ての本を削除（現在のユーザーの本のみ）
+ */
+export async function deleteAllBooksFromCloud(): Promise<void> {
+  const { error } = await supabase
+    .from('books')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // RLSにより自分の本のみ削除される
+
+  if (error) {
+    console.error('Failed to delete all books from cloud:', error);
+    throw error;
+  }
+}
+
+/**
  * 指定日時以降に更新された本を取得
  */
 export async function fetchBooksUpdatedSince(since: string): Promise<Book[]> {

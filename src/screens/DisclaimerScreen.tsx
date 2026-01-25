@@ -11,7 +11,7 @@ export default function DisclaimerScreen() {
     >
       <Text style={[styles.title, { color: colors.textPrimary }]}>免責事項</Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2024年12月30日
+        最終更新日: 2026年1月25日
       </Text>
 
       <View style={styles.section}>
@@ -25,15 +25,22 @@ export default function DisclaimerScreen() {
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-          2. データの損失
+          2. データの保存と損失
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリに保存されたデータは、ユーザーのデバイス内にのみ存在します。以下の場合にデータが失われる可能性があります。{'\n\n'}
+          本アプリに保存されたデータは、デフォルトではユーザーのデバイス内にのみ存在します。クラウド同期機能を有効にした場合は、データはクラウドサーバー（Supabase）にも保存されます。{'\n\n'}
+          【ローカルデータ】{'\n'}
+          以下の場合にデータが失われる可能性があります。{'\n'}
           • アプリのアンインストール{'\n'}
           • デバイスの初期化または故障{'\n'}
           • OSのアップデートによる影響{'\n'}
+          • 「すべてのデータを削除」機能の実行{'\n'}
           • その他の予期しない技術的問題{'\n\n'}
-          開発者は、いかなる理由によるデータの損失についても責任を負いません。重要なデータは定期的にエクスポート機能を使用してバックアップすることをお勧めします。
+          【クラウドデータ（クラウド同期有効時）】{'\n'}
+          • サインアウトしてもクラウドデータは保持されます{'\n'}
+          • 「すべてのデータを削除」実行時に「クラウドも削除」を選択するとクラウドデータも削除されます{'\n'}
+          • 「ローカルのみ」を選択した場合、クラウドデータは保持されます{'\n\n'}
+          開発者は、いかなる理由によるデータの損失についても責任を負いません。クラウド同期を有効にするか、定期的にエクスポート機能を使用してバックアップすることをお勧めします。
         </Text>
       </View>
 
@@ -42,7 +49,7 @@ export default function DisclaimerScreen() {
           3. 書籍情報の正確性
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリはGoogle Books APIを通じて書籍情報を取得する場合があります。取得された情報の正確性、完全性、最新性について、開発者は保証しません。書籍情報に誤りがある場合は、ユーザー自身で修正してください。
+          本アプリはOpenBD APIおよびGoogle Books APIを通じて書籍情報を取得する場合があります。取得された情報の正確性、完全性、最新性について、開発者は保証しません。書籍情報に誤りがある場合は、ユーザー自身で修正してください。
         </Text>
       </View>
 
@@ -54,8 +61,9 @@ export default function DisclaimerScreen() {
           開発者は、以下の場合において、事前の通知なく本アプリの提供を中断または終了することがあります。{'\n\n'}
           • システムの保守・点検を行う場合{'\n'}
           • 技術的な問題が発生した場合{'\n'}
-          • 外部サービス（API等）の提供が終了した場合{'\n'}
-          • その他、開発者が必要と判断した場合
+          • 外部サービス（API、認証、クラウド同期等）の提供が終了した場合{'\n'}
+          • その他、開発者が必要と判断した場合{'\n\n'}
+          クラウド同期サービスを終了する場合は、事前にユーザーに通知し、データのエクスポート期間を設けます。
         </Text>
       </View>
 
@@ -78,7 +86,14 @@ export default function DisclaimerScreen() {
           6. 第三者サービス
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリは、書籍情報の取得にGoogle Books APIを使用しています。このサービスはGoogleの利用規約に従って提供されており、Googleのサービス変更や停止により本アプリの一部機能が利用できなくなる可能性があります。
+          本アプリは以下の第三者サービスを使用しています。{'\n\n'}
+          【書籍情報の取得】{'\n'}
+          • OpenBD API（日本の書籍情報）{'\n'}
+          • Google Books API（海外の書籍情報）{'\n\n'}
+          【クラウド同期機能（オプション）】{'\n'}
+          • Sign in with Apple（Apple社の認証サービス）{'\n'}
+          • Supabase（クラウドデータベース）{'\n\n'}
+          これらのサービスは各提供元の利用規約に従って提供されており、サービスの変更や停止により本アプリの一部機能が利用できなくなる可能性があります。開発者は、これらの外部サービスの障害や仕様変更による影響について責任を負いません。
         </Text>
       </View>
 
