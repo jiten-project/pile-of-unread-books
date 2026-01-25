@@ -206,12 +206,13 @@ export default function SettingsScreen() {
 
     const deleteLocalAndCloud = async () => {
       try {
-        await deleteAllBooks();
+        // クラウドを先に削除（失敗した場合、ローカルデータは保持される）
         await deleteAllBooksFromCloud();
+        await deleteAllBooks();
         setBooks([]);
         Alert.alert('完了', 'ローカルとクラウドのデータをすべて削除しました');
       } catch (error) {
-        Alert.alert('エラー', 'データの削除に失敗しました');
+        Alert.alert('エラー', 'データの削除に失敗しました。再度お試しください。');
         console.error(error);
       }
     };
@@ -253,7 +254,28 @@ export default function SettingsScreen() {
             { text: 'キャンセル', style: 'cancel' },
             {
               text: 'ローカルのみ',
-              onPress: deleteLocalOnly,
+              onPress: () => {
+                // ローカルのみ削除時の警告: 次回同期でデータが戻ることを説明
+                Alert.alert(
+                  '注意',
+                  'ローカルデータを削除しても、次回同期時にクラウドからデータが復元されます。\n\nこのデバイスからデータを完全に削除するには、削除後にサインアウトしてください。',
+                  [
+                    { text: 'キャンセル', style: 'cancel' },
+                    {
+                      text: '削除のみ',
+                      onPress: deleteLocalOnly,
+                    },
+                    {
+                      text: '削除してサインアウト',
+                      style: 'destructive',
+                      onPress: async () => {
+                        await deleteLocalOnly();
+                        signOut();
+                      },
+                    },
+                  ]
+                );
+              },
             },
             {
               text: 'クラウドも削除',
