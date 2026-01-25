@@ -65,6 +65,19 @@ export async function initDatabase(): Promise<void> {
   } catch {
     // カラムが既に存在する場合は無視
   }
+
+  // クラウド同期用カラムを追加
+  try {
+    await db.execAsync(`ALTER TABLE books ADD COLUMN sync_status TEXT DEFAULT 'pending';`);
+  } catch {
+    // カラムが既に存在する場合は無視
+  }
+
+  try {
+    await db.execAsync(`ALTER TABLE books ADD COLUMN owner_user_id TEXT;`);
+  } catch {
+    // カラムが既に存在する場合は無視
+  }
 }
 
 export async function getAllBooks(): Promise<Book[]> {
@@ -72,8 +85,9 @@ export async function getAllBooks(): Promise<Book[]> {
     throw new Error('Database not initialized');
   }
 
+  // pending_delete の本は除外（ユーザーが削除済みのため表示しない）
   const rows = await db.getAllAsync<Record<string, unknown>>(
-    'SELECT * FROM books ORDER BY created_at DESC'
+    "SELECT * FROM books WHERE sync_status != 'pending_delete' OR sync_status IS NULL ORDER BY created_at DESC"
   );
   return rows.map(rowToBook);
 }
@@ -92,7 +106,8 @@ export async function getFilteredBooks(options: {
     throw new Error('Database not initialized');
   }
 
-  const conditions: string[] = [];
+  // pending_delete の本は常に除外
+  const conditions: string[] = ["(sync_status != 'pending_delete' OR sync_status IS NULL)"];
   const params: (string | number)[] = [];
 
   if (options.status) {
@@ -164,6 +179,8 @@ export async function insertBook(book: Book): Promise<void> {
     book.currentPage ?? null,
     book.createdAt,
     book.updatedAt,
+    book.syncStatus ?? 'pending',
+    book.ownerUserId ?? null,
   ];
 
   await db.runAsync(
@@ -172,8 +189,8 @@ export async function insertBook(book: Book): Promise<void> {
       page_count, thumbnail_url, categories, status, priority, condition,
       purchase_date, purchase_place, purchase_price, purchase_reason,
       tags, notes, start_date, completed_date, current_page,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      created_at, updated_at, sync_status, owner_user_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       isbn = excluded.isbn,
       title = excluded.title,
@@ -196,7 +213,9 @@ export async function insertBook(book: Book): Promise<void> {
       start_date = excluded.start_date,
       completed_date = excluded.completed_date,
       current_page = excluded.current_page,
-      updated_at = excluded.updated_at`,
+      updated_at = excluded.updated_at,
+      sync_status = excluded.sync_status,
+      owner_user_id = excluded.owner_user_id`,
     params
   );
 }
@@ -237,7 +256,8 @@ export async function updateBook(book: Book): Promise<void> {
       description = ?, page_count = ?, thumbnail_url = ?, categories = ?,
       status = ?, priority = ?, condition = ?, purchase_date = ?, purchase_place = ?,
       purchase_price = ?, purchase_reason = ?, tags = ?, notes = ?,
-      start_date = ?, completed_date = ?, current_page = ?, updated_at = ?
+      start_date = ?, completed_date = ?, current_page = ?, updated_at = ?,
+      sync_status = ?, owner_user_id = ?
     WHERE id = ?`,
     [
       book.isbn ?? null,
@@ -262,6 +282,8 @@ export async function updateBook(book: Book): Promise<void> {
       book.completedDate ?? null,
       book.currentPage ?? null,
       book.updatedAt,
+      book.syncStatus ?? 'pending',
+      book.ownerUserId ?? null,
       book.id,
     ]
   );
@@ -334,5 +356,98 @@ function rowToBook(row: Record<string, unknown>): Book {
     currentPage: row.current_page as number | undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+    // クラウド同期用
+    syncStatus: row.sync_status as Book['syncStatus'],
+    ownerUserId: row.owner_user_id as string | undefined,
   };
+}
+
+/**
+ * 同期ステータスを更新
+ */
+export async function updateSyncStatus(
+  id: string,
+  syncStatus: Book['syncStatus'],
+  ownerUserId?: string
+): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  if (ownerUserId) {
+    await db.runAsync(
+      'UPDATE books SET sync_status = ?, owner_user_id = ? WHERE id = ?',
+      [syncStatus ?? 'pending', ownerUserId, id]
+    );
+  } else {
+    await db.runAsync(
+      'UPDATE books SET sync_status = ? WHERE id = ?',
+      [syncStatus ?? 'pending', id]
+    );
+  }
+}
+
+/**
+ * 同期が必要な本を取得（pending または error のもの）
+ */
+export async function getBooksNeedingSync(): Promise<Book[]> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  const rows = await db.getAllAsync<Record<string, unknown>>(
+    "SELECT * FROM books WHERE sync_status IN ('pending', 'error') OR sync_status IS NULL ORDER BY updated_at ASC"
+  );
+  return rows.map(rowToBook);
+}
+
+/**
+ * 本を削除待ち（pending_delete）としてマーク（ソフトデリート）
+ * クラウドへの削除が成功するまでローカルに記録を残す
+ */
+export async function markBookAsDeleted(id: string): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  await db.runAsync(
+    "UPDATE books SET sync_status = 'pending_delete', updated_at = ? WHERE id = ?",
+    [new Date().toISOString(), id]
+  );
+}
+
+/**
+ * 削除待ちの本を取得
+ */
+export async function getBooksPendingDelete(): Promise<Book[]> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  const rows = await db.getAllAsync<Record<string, unknown>>(
+    "SELECT * FROM books WHERE sync_status = 'pending_delete'"
+  );
+  return rows.map(rowToBook);
+}
+
+/**
+ * 本を完全に削除（クラウド削除成功後に呼び出す）
+ */
+export async function hardDeleteBook(id: string): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  await db.runAsync('DELETE FROM books WHERE id = ?', [id]);
+}
+
+/**
+ * 全ての本の同期ステータスをpendingにリセット
+ */
+export async function resetAllSyncStatus(): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  await db.runAsync("UPDATE books SET sync_status = 'pending'");
 }

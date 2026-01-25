@@ -95,6 +95,18 @@
       margin-bottom: 8px;
     }
 
+    .highlight-box {
+      background: #e3f2fd;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .highlight-box p {
+      margin: 0;
+      font-size: 14px;
+    }
+
     footer {
       text-align: center;
       padding: 30px 20px;
@@ -132,7 +144,7 @@
 
   <main class="container">
     <div class="card">
-      <p class="last-updated">最終更新日: 2025年1月17日</p>
+      <p class="last-updated">最終更新日: 2026年1月25日</p>
 
       <div class="section">
         <h2>はじめに</h2>
@@ -143,27 +155,51 @@
 
       <div class="section">
         <h2>収集する情報</h2>
-        <p>本アプリは、以下の情報をユーザーのデバイス内にのみ保存します。</p>
+        <p>本アプリは、以下の情報をユーザーのデバイス内に保存します。</p>
         <ul>
           <li>書籍情報（タイトル、著者、ISBN等）</li>
           <li>読書状況（ステータス、読書日時等）</li>
           <li>アプリ設定（テーマ、通知設定等）</li>
         </ul>
-        <p>これらの情報は外部サーバーには送信されません。</p>
+        <div class="highlight-box">
+          <p><strong>クラウド同期を有効にした場合</strong>：上記の書籍情報は、Apple IDに紐づいたクラウドサーバー（Supabase）にも保存されます。これにより、複数デバイス間でデータを同期できます。</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>クラウド同期機能（オプション）</h2>
+        <p>
+          バージョン1.1.0より、クラウド同期機能が追加されました。この機能は<strong>任意</strong>であり、サインインしない場合はデータはデバイス内にのみ保存されます。
+        </p>
+        <p style="margin-top: 10px;"><strong>クラウド同期を有効にした場合：</strong></p>
+        <ul>
+          <li>Apple ID（Sign in with Apple）を使用して認証を行います</li>
+          <li>書籍データは暗号化された通信（HTTPS）でクラウドサーバーに送信されます</li>
+          <li>データはSupabase（クラウドデータベースサービス）に保存されます</li>
+          <li>データはユーザーのApple IDに紐づけられ、本人のみがアクセスできます</li>
+        </ul>
+        <div class="highlight-box">
+          <p>メールアドレスについて：Apple IDの「メールを非公開」機能を使用した場合、実際のメールアドレスは本アプリに共有されません。</p>
+        </div>
       </div>
 
       <div class="section">
         <h2>外部サービスとの連携</h2>
         <p>
-          本アプリは、書籍情報の取得のために以下のAPIを利用する場合があります。
+          本アプリは、以下の外部サービスを利用しています。
         </p>
+        <p style="margin-top: 10px;"><strong>書籍情報の取得：</strong></p>
         <ul>
           <li>OpenBD API（日本の書籍情報）</li>
           <li>Google Books API（海外の書籍情報）</li>
         </ul>
-        <p>
-          この際、ISBN番号のみが送信され、個人を特定する情報は送信されません。
-        </p>
+        <p>この際、ISBN番号のみが送信され、個人を特定する情報は送信されません。</p>
+
+        <p style="margin-top: 15px;"><strong>認証・データ保存（クラウド同期有効時のみ）：</strong></p>
+        <ul>
+          <li>Sign in with Apple（Apple社の認証サービス）</li>
+          <li>Supabase（クラウドデータベース）</li>
+        </ul>
       </div>
 
       <div class="section">
@@ -182,22 +218,44 @@
 
       <div class="section">
         <h2>データの保存と削除</h2>
+        <p><strong>ローカルデータ：</strong></p>
+        <ul>
+          <li>デバイス内のデータは、アプリをアンインストールすると削除されます</li>
+          <li>設定画面の「すべてのデータを削除」機能を使用すると、ローカルデータが削除されます</li>
+          <li>この操作ではクラウドデータは削除されません</li>
+        </ul>
+        <p style="margin-top: 15px;"><strong>クラウドデータ（クラウド同期有効時）：</strong></p>
+        <ul>
+          <li>サインアウトしてもクラウドデータは保持されます（再サインイン時に復元可能）</li>
+          <li>「すべてのデータを削除」実行時に「クラウドも削除」を選択すると、クラウドデータも削除されます</li>
+          <li>「ローカルのみ」を選択した場合、クラウドデータは保持されます</li>
+          <li>アカウント削除を行うと、関連するクラウドデータもすべて削除されます</li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h2>データのセキュリティ</h2>
         <p>
-          すべてのデータはユーザーのデバイス内にのみ保存されます。アプリをアンインストールすると、保存されたデータはすべて削除されます。また、設定画面からデータを手動で削除することも可能です。
+          クラウド同期機能では、以下のセキュリティ対策を実施しています。
         </p>
+        <ul>
+          <li>すべての通信はHTTPS（TLS暗号化）で保護されています</li>
+          <li>Row Level Security（RLS）により、ユーザーは自分のデータにのみアクセスできます</li>
+          <li>認証にはAppleの安全な認証システムを使用しています</li>
+        </ul>
       </div>
 
       <div class="section">
         <h2>第三者への情報提供</h2>
         <p>
-          本アプリは、ユーザーの個人情報を第三者に提供、販売、共有することはありません。
+          本アプリは、ユーザーの個人情報を第三者に提供、販売、共有することはありません。ただし、法令に基づく開示要請があった場合は、この限りではありません。
         </p>
       </div>
 
       <div class="section">
         <h2>お子様のプライバシー</h2>
         <p>
-          本アプリは年齢制限を設けておらず、個人情報を収集しないため、お子様も安心してご利用いただけます。
+          本アプリは年齢制限を設けていません。クラウド同期機能を使用しない場合、個人情報は収集されないため、お子様も安心してご利用いただけます。クラウド同期機能のご利用には、Apple IDが必要です。
         </p>
       </div>
 
@@ -219,7 +277,7 @@
 
   <footer>
     <p><a href="index.html">← トップに戻る</a></p>
-    <p style="margin-top: 10px;">&copy; 2024 積読本管理. All rights reserved.</p>
+    <p style="margin-top: 10px;">&copy; 2026 積読本管理. All rights reserved.</p>
   </footer>
 </body>
 </html>
