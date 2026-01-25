@@ -8,7 +8,8 @@ export type Priority = 'high' | 'medium' | 'low';
 export type BookCondition = 'new' | 'used' | 'ebook' | 'other';
 
 // 同期ステータス
-export type SyncStatus = 'synced' | 'pending' | 'error';
+// pending_delete: ローカルで削除済み、クラウドへの削除待ち
+export type SyncStatus = 'synced' | 'pending' | 'error' | 'pending_delete';
 
 // 書籍の基本情報（API から取得）
 export interface BookInfo {

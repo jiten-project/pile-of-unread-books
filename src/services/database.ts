@@ -85,8 +85,9 @@ export async function getAllBooks(): Promise<Book[]> {
     throw new Error('Database not initialized');
   }
 
+  // pending_delete の本は除外（ユーザーが削除済みのため表示しない）
   const rows = await db.getAllAsync<Record<string, unknown>>(
-    'SELECT * FROM books ORDER BY created_at DESC'
+    "SELECT * FROM books WHERE sync_status != 'pending_delete' OR sync_status IS NULL ORDER BY created_at DESC"
   );
   return rows.map(rowToBook);
 }
@@ -105,7 +106,8 @@ export async function getFilteredBooks(options: {
     throw new Error('Database not initialized');
   }
 
-  const conditions: string[] = [];
+  // pending_delete の本は常に除外
+  const conditions: string[] = ["(sync_status != 'pending_delete' OR sync_status IS NULL)"];
   const params: (string | number)[] = [];
 
   if (options.status) {
@@ -390,6 +392,46 @@ export async function getBooksNeedingSync(): Promise<Book[]> {
     "SELECT * FROM books WHERE sync_status IN ('pending', 'error') OR sync_status IS NULL ORDER BY updated_at ASC"
   );
   return rows.map(rowToBook);
+}
+
+/**
+ * 本を削除待ち（pending_delete）としてマーク（ソフトデリート）
+ * クラウドへの削除が成功するまでローカルに記録を残す
+ */
+export async function markBookAsDeleted(id: string): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  await db.runAsync(
+    "UPDATE books SET sync_status = 'pending_delete', updated_at = ? WHERE id = ?",
+    [new Date().toISOString(), id]
+  );
+}
+
+/**
+ * 削除待ちの本を取得
+ */
+export async function getBooksPendingDelete(): Promise<Book[]> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  const rows = await db.getAllAsync<Record<string, unknown>>(
+    "SELECT * FROM books WHERE sync_status = 'pending_delete'"
+  );
+  return rows.map(rowToBook);
+}
+
+/**
+ * 本を完全に削除（クラウド削除成功後に呼び出す）
+ */
+export async function hardDeleteBook(id: string): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  await db.runAsync('DELETE FROM books WHERE id = ?', [id]);
 }
 
 /**
