@@ -85,10 +85,13 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
 
     // 2. クラウドの全データを取得
     let cloudBooks: Book[] = [];
+    let cloudFetchSuccess = false;
     try {
       cloudBooks = await fetchAllBooksFromCloud();
+      cloudFetchSuccess = true;
     } catch (error) {
       // クラウドからの取得に失敗しても、アップロードは試みる
+      // ただし、リモート削除の検出は行わない（データ消失を防ぐため）
       result.errors.push(`クラウドからの取得に失敗: ${error instanceof Error ? error.message : String(error)}`);
     }
     const cloudBooksMap = new Map(cloudBooks.map(b => [b.id, b]));
@@ -99,9 +102,9 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
       const cloudBook = cloudBooksMap.get(localBook.id);
       if (!cloudBook) {
         // クラウドにない
-        // 以前同期済み（synced）かつ現在のユーザーの本 → 別デバイスで削除された
-        // それ以外（pending/error/未所有） → 新規追加なのでアップロード
-        if (localBook.syncStatus === 'synced' && localBook.ownerUserId === userId) {
+        // 重要: クラウド取得が成功した場合のみ「別デバイスで削除された」と判定
+        // クラウド取得が失敗した場合は、削除せずアップロード対象とする（データ保護）
+        if (cloudFetchSuccess && localBook.syncStatus === 'synced' && localBook.ownerUserId === userId) {
           // 別デバイスで削除された本 → ローカルからも削除
           try {
             await hardDeleteBook(localBook.id);
@@ -110,7 +113,7 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
             result.errors.push(`ローカル削除に失敗 (${localBook.title}): ${error instanceof Error ? error.message : String(error)}`);
           }
         } else {
-          // 新規追加の本 → アップロード
+          // 新規追加の本、またはクラウド取得失敗時 → アップロード
           booksToUpload.push(localBook);
         }
       } else {
