@@ -105,7 +105,8 @@ export async function scheduleReadingReminder(
   // 既存の通知をキャンセル
   await cancelAllNotifications();
 
-  if (!settings.enabled) return;
+  // 通知が無効、または読書リマインダーが無効の場合はスケジュールしない
+  if (!settings.enabled || !settings.readingReminder) return;
 
   const [hours, minutes] = settings.reminderTime.split(':').map(Number);
 
@@ -131,11 +132,16 @@ export async function scheduleReadingReminder(
 
 /**
  * 積読本リマインダーを送信（即時）
+ * 設定でunreadReminderが無効の場合は送信しない
  */
 export async function sendUnreadBookReminder(
   bookTitle: string,
   daysSinceAdded: number
 ): Promise<void> {
+  // 設定を確認し、未読リマインダーが無効の場合は送信しない
+  const settings = await getNotificationSettings();
+  if (!settings.enabled || !settings.unreadReminder) return;
+
   await Notifications.scheduleNotificationAsync({
     content: {
       title: '📖 積読本のお知らせ',

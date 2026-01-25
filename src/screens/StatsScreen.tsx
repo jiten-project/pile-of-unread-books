@@ -52,15 +52,16 @@ export default function StatsScreen() {
     const monthlyCompleted: { month: string; count: number }[] = [];
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      // 月末日の23:59:59.999に設定して、その日の読了も含める
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
       const count = books.filter(book => {
         if (!book.completedDate) return false;
         const completed = new Date(book.completedDate);
-        return completed >= date && completed <= monthEnd;
+        return completed >= monthStart && completed <= monthEnd;
       }).length;
       monthlyCompleted.push({
-        month: `${date.getMonth() + 1}月`,
+        month: `${monthStart.getMonth() + 1}月`,
         count,
       });
     }

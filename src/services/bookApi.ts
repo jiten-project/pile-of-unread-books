@@ -3,6 +3,68 @@ import { BookInfo } from '../types';
 const GOOGLE_BOOKS_API = 'https://www.googleapis.com/books/v1/volumes';
 const OPENBD_API = 'https://api.openbd.jp/v1/get';
 
+// API設定
+const API_TIMEOUT_MS = 10000; // 10秒
+
+// エラー種別
+export type ApiErrorType = 'network' | 'timeout' | 'server' | 'parse' | 'not_found';
+
+export class ApiError extends Error {
+  constructor(
+    public type: ApiErrorType,
+    message: string,
+    public originalError?: unknown
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/**
+ * タイムアウト付きfetch
+ */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = API_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError('timeout', `Request timed out after ${timeoutMs}ms`);
+    }
+    throw new ApiError('network', 'Network request failed', error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * レスポンスの検証とJSONパース
+ */
+async function parseJsonResponse<T>(response: Response, apiName: string): Promise<T> {
+  if (!response.ok) {
+    throw new ApiError(
+      'server',
+      `${apiName} returned status ${response.status}: ${response.statusText}`
+    );
+  }
+
+  try {
+    return (await response.json()) as T;
+  } catch (error) {
+    throw new ApiError('parse', `Failed to parse ${apiName} response`, error);
+  }
+}
+
 interface GoogleBooksResponse {
   totalItems: number;
   items?: Array<{
@@ -50,6 +112,24 @@ interface OpenBDResponse {
   };
 }
 
+/**
+ * 型ガード: GoogleBooksResponseのitemsが有効かチェック
+ */
+function hasValidItems(
+  data: GoogleBooksResponse
+): data is GoogleBooksResponse & { items: NonNullable<GoogleBooksResponse['items']> } {
+  return Array.isArray(data.items) && data.items.length > 0;
+}
+
+/**
+ * 型ガード: OpenBDResponseのsummaryが有効かチェック
+ */
+function hasValidSummary(
+  data: OpenBDResponse | null
+): data is OpenBDResponse & { summary: NonNullable<OpenBDResponse['summary']> } {
+  return data !== null && data.summary !== undefined && data.summary !== null;
+}
+
 export async function searchByISBN(isbn: string): Promise<BookInfo | null> {
   const cleanIsbn = isbn.replace(/[-\s]/g, '');
 
@@ -82,15 +162,15 @@ export async function searchByISBN(isbn: string): Promise<BookInfo | null> {
 
 async function searchOpenBD(isbn: string): Promise<BookInfo | null> {
   try {
-    const response = await fetch(`${OPENBD_API}?isbn=${isbn}`);
-    const data: OpenBDResponse[] = await response.json();
+    const response = await fetchWithTimeout(`${OPENBD_API}?isbn=${isbn}`);
+    const data = await parseJsonResponse<(OpenBDResponse | null)[]>(response, 'OpenBD');
 
-    if (!data || !data[0] || !data[0].summary) {
+    if (!Array.isArray(data) || data.length === 0 || !hasValidSummary(data[0])) {
       return null;
     }
 
     const book = data[0];
-    const summary = book.summary!;
+    const summary = book.summary;
 
     // ページ数を取得
     let pageCount: number | undefined;
@@ -98,7 +178,10 @@ async function searchOpenBD(isbn: string): Promise<BookInfo | null> {
     if (extents) {
       const pageExtent = extents.find(e => e.ExtentType === '00');
       if (pageExtent?.ExtentValue) {
-        pageCount = parseInt(pageExtent.ExtentValue, 10);
+        const parsed = parseInt(pageExtent.ExtentValue, 10);
+        if (!isNaN(parsed)) {
+          pageCount = parsed;
+        }
       }
     }
 
@@ -120,17 +203,21 @@ async function searchOpenBD(isbn: string): Promise<BookInfo | null> {
       description,
     };
   } catch (error) {
-    console.error('OpenBD API error:', error);
+    if (error instanceof ApiError) {
+      console.error(`OpenBD API ${error.type} error:`, error.message);
+    } else {
+      console.error('OpenBD API unexpected error:', error);
+    }
     return null;
   }
 }
 
 async function searchGoogleBooks(isbn: string): Promise<BookInfo | null> {
   try {
-    const response = await fetch(`${GOOGLE_BOOKS_API}?q=isbn:${isbn}`);
-    const data: GoogleBooksResponse = await response.json();
+    const response = await fetchWithTimeout(`${GOOGLE_BOOKS_API}?q=isbn:${isbn}`);
+    const data = await parseJsonResponse<GoogleBooksResponse>(response, 'Google Books');
 
-    if (!data.items || data.items.length === 0) {
+    if (!hasValidItems(data)) {
       return null;
     }
 
@@ -156,19 +243,23 @@ async function searchGoogleBooks(isbn: string): Promise<BookInfo | null> {
       thumbnailUrl: book.imageLinks?.thumbnail?.replace('http:', 'https:'),
     };
   } catch (error) {
-    console.error('Google Books API error:', error);
+    if (error instanceof ApiError) {
+      console.error(`Google Books API ${error.type} error:`, error.message);
+    } else {
+      console.error('Google Books API unexpected error:', error);
+    }
     return null;
   }
 }
 
 export async function searchByTitle(title: string): Promise<BookInfo[]> {
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(title)}&maxResults=10&langRestrict=ja`
     );
-    const data: GoogleBooksResponse = await response.json();
+    const data = await parseJsonResponse<GoogleBooksResponse>(response, 'Google Books');
 
-    if (!data.items) {
+    if (!hasValidItems(data)) {
       return [];
     }
 
@@ -195,7 +286,11 @@ export async function searchByTitle(title: string): Promise<BookInfo[]> {
       };
     });
   } catch (error) {
-    console.error('Google Books search error:', error);
+    if (error instanceof ApiError) {
+      console.error(`Google Books search ${error.type} error:`, error.message);
+    } else {
+      console.error('Google Books search unexpected error:', error);
+    }
     return [];
   }
 }

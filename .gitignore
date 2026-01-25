@@ -12,11 +12,6 @@ expo-env.d.ts
 # Native
 .kotlin/
 *.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 
 # Metro
 .metro-health-check*
@@ -28,10 +23,6 @@ yarn-error.*
 
 # macOS
 .DS_Store
-*.pem
-
-# local env files
-.env*.local
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +30,101 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# ===================================
+# Security - Credentials & Secrets
+# ===================================
+
+# Environment files
+.env
+.env.*
+.env*.local
+*.env
+
+# Signing keys and certificates
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+*.cer
+*.certSigningRequest
+
+# EAS credentials
+credentials.json
+credentials/
+
+# API keys
+**/secrets/
+**/private_keys/
+.appstoreconnect/
+
+# ===================================
+# Build artifacts
+# ===================================
+
+# iOS builds
+*.ipa
+*.app
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+
+# Android builds
+*.apk
+*.aab
+
+# Build output directories
+build/
+build-*.ipa
+build-*.apk
+
+# ===================================
+# IDE and Editor
+# ===================================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ===================================
+# Logs and Temp files
+# ===================================
+
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# ===================================
+# Testing
+# ===================================
+
+coverage/
+.nyc_output/
+
+# ===================================
+# Miscellaneous
+# ===================================
+
+# Sentry
+.sentryclirc
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output

@@ -2,7 +2,7 @@
   "expo": {
     "name": "積読本管理",
     "slug": "pile-of-unread-books",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +13,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jiten0410.pileofunreadbooks",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "本のバーコード（ISBN）をスキャンして書籍情報を自動取得するためにカメラを使用します。例：本の裏表紙にあるバーコードを読み取り、タイトルや著者名を自動で入力します。"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +31,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9d81b693-2470-4ecb-8b84-b9cf892af90d"
+      }
     }
   }
 }

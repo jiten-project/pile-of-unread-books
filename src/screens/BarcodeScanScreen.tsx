@@ -45,12 +45,11 @@ export default function BarcodeScanScreen() {
       } else {
         Alert.alert(
           '書籍が見つかりません',
-          'この ISBN の書籍情報が見つかりませんでした。手動で登録しますか？',
+          'この ISBN の書籍情報が見つかりませんでした。',
           [
             {
-              text: 'キャンセル',
+              text: '再スキャン',
               onPress: () => setScanned(false),
-              style: 'cancel',
             },
             {
               text: '手動登録',
@@ -62,9 +61,22 @@ export default function BarcodeScanScreen() {
         );
       }
     } catch (error) {
-      Alert.alert('エラー', '書籍情報の取得に失敗しました', [
-        { text: 'OK', onPress: () => setScanned(false) },
-      ]);
+      Alert.alert(
+        'エラー',
+        '書籍情報の取得に失敗しました。ネットワーク接続を確認してください。',
+        [
+          {
+            text: '再スキャン',
+            onPress: () => setScanned(false),
+          },
+          {
+            text: '手動で登録',
+            onPress: () => {
+              navigation.navigate('Main');
+            },
+          },
+        ]
+      );
     } finally {
       setIsSearching(false);
     }
@@ -88,10 +100,10 @@ export default function BarcodeScanScreen() {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={requestPermission}
-          accessibilityLabel="カメラアクセスを許可する"
+          accessibilityLabel="次へ進む"
           accessibilityRole="button"
         >
-          <Text style={styles.buttonText}>カメラを許可する</Text>
+          <Text style={styles.buttonText}>次へ</Text>
         </TouchableOpacity>
       </View>
     );

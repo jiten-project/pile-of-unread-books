@@ -1,3 +1,19 @@
+import { Dimensions } from 'react-native';
+
+const screenWidth = Dimensions.get('window').width;
+
+// 基準画面幅（iPhone 14: 390px）
+const BASE_WIDTH = 390;
+
+// スケールファクター（画面幅に応じて自動調整）
+// 例: iPhone SE (375px) = 0.96x, iPhone 14 (390px) = 1.0x, iPad (1024px) = 2.62x
+// 最小 0.85x、最大 1.5x に制限
+const rawScale = screenWidth / BASE_WIDTH;
+const scaleFactor = Math.min(Math.max(rawScale, 0.85), 1.5);
+
+// デバイス種別判定
+const isTablet = screenWidth > 600;
+
 // アプリ共通のテーマカラー
 export const COLORS = {
   // プライマリカラー
@@ -71,13 +87,20 @@ export const BORDER_RADIUS = {
   full: 9999,
 } as const;
 
-// フォントサイズ
+// フォントサイズ（iPad対応：自動スケーリング）
 export const FONT_SIZE = {
-  xs: 10,
-  sm: 12,
-  md: 14,
-  lg: 16,
-  xl: 18,
-  xxl: 24,
-  xxxl: 28,
+  xs: Math.round(10 * scaleFactor),
+  sm: Math.round(12 * scaleFactor),
+  md: Math.round(14 * scaleFactor),
+  lg: Math.round(16 * scaleFactor),
+  xl: Math.round(18 * scaleFactor),
+  xxl: Math.round(24 * scaleFactor),
+  xxxl: Math.round(28 * scaleFactor),
+} as const;
+
+// デバイス情報のエクスポート
+export const DEVICE = {
+  isTablet,
+  screenWidth,
+  scaleFactor,
 } as const;

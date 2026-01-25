@@ -14,6 +14,7 @@ import { usePersistBook } from '../hooks';
 import { BookStatus, Priority, BookCondition, RootStackNavigationProp, BookConfirmRouteProp } from '../types';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
 import { useTheme } from '../contexts';
+import { parsePrice } from '../utils';
 
 interface AdditionalData {
   status: BookStatus;
@@ -98,9 +99,7 @@ export default function BookConfirmScreen() {
         priority: additionalData.priority,
         condition: additionalData.condition,
         purchasePlace: additionalData.purchasePlace.trim() || undefined,
-        purchasePrice: additionalData.purchasePrice
-          ? Number(additionalData.purchasePrice)
-          : undefined,
+        purchasePrice: parsePrice(additionalData.purchasePrice),
         purchaseReason: additionalData.purchaseReason.trim() || undefined,
         purchaseDate: new Date().toISOString(),
         tags: additionalData.tags,

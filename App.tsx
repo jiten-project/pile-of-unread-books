@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { RootNavigator } from './src/navigation';
 import { useDatabase } from './src/hooks';
-import { ThemeProvider, SettingsProvider, useTheme } from './src/contexts';
+import { ThemeProvider, SettingsProvider, AuthProvider, SyncProvider, useTheme } from './src/contexts';
 
 function AppContent() {
   const { isReady } = useDatabase();
@@ -59,7 +59,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <SettingsProvider>
-        <ThemedApp />
+        <AuthProvider>
+          <SyncProvider>
+            <ThemedApp />
+          </SyncProvider>
+        </AuthProvider>
       </SettingsProvider>
     </ThemeProvider>
   );
