@@ -177,7 +177,8 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAll = () => {
-    if (books.length === 0) {
+    // 未ログイン時のみ早期リターン（クラウドデータがないため）
+    if (!user && books.length === 0) {
       Alert.alert('削除', '削除するデータがありません');
       return;
     }
@@ -189,6 +190,16 @@ export default function SettingsScreen() {
         Alert.alert('完了', 'ローカルデータを削除しました');
       } catch (error) {
         Alert.alert('エラー', 'データの削除に失敗しました');
+        console.error(error);
+      }
+    };
+
+    const deleteCloudOnly = async () => {
+      try {
+        await deleteAllBooksFromCloud();
+        Alert.alert('完了', 'クラウドデータを削除しました');
+      } catch (error) {
+        Alert.alert('エラー', 'クラウドデータの削除に失敗しました');
         console.error(error);
       }
     };
@@ -206,36 +217,65 @@ export default function SettingsScreen() {
     };
 
     if (user) {
-      // ログイン中: クラウドデータも削除するか選択
-      Alert.alert(
-        'すべてのデータを削除',
-        `${books.length}冊のデータを削除します。クラウドデータも削除しますか？`,
-        [
-          { text: 'キャンセル', style: 'cancel' },
-          {
-            text: 'ローカルのみ',
-            onPress: deleteLocalOnly,
-          },
-          {
-            text: 'クラウドも削除',
-            style: 'destructive',
-            onPress: () => {
-              Alert.alert(
-                '最終確認',
-                'クラウドデータを削除すると、他のデバイスからもデータが消えます。本当に削除しますか？',
-                [
-                  { text: 'キャンセル', style: 'cancel' },
-                  {
-                    text: '削除する',
-                    style: 'destructive',
-                    onPress: deleteLocalAndCloud,
-                  },
-                ]
-              );
+      if (books.length === 0) {
+        // ログイン中でローカル空: クラウドのみ削除可能
+        Alert.alert(
+          'クラウドデータを削除',
+          'ローカルにデータはありません。クラウドデータを削除しますか？',
+          [
+            { text: 'キャンセル', style: 'cancel' },
+            {
+              text: 'クラウドを削除',
+              style: 'destructive',
+              onPress: () => {
+                Alert.alert(
+                  '最終確認',
+                  'クラウドデータを削除すると、他のデバイスからもデータが消えます。本当に削除しますか？',
+                  [
+                    { text: 'キャンセル', style: 'cancel' },
+                    {
+                      text: '削除する',
+                      style: 'destructive',
+                      onPress: deleteCloudOnly,
+                    },
+                  ]
+                );
+              },
             },
-          },
-        ]
-      );
+          ]
+        );
+      } else {
+        // ログイン中でローカルあり: クラウドも削除するか選択
+        Alert.alert(
+          'すべてのデータを削除',
+          `${books.length}冊のデータを削除します。クラウドデータも削除しますか？`,
+          [
+            { text: 'キャンセル', style: 'cancel' },
+            {
+              text: 'ローカルのみ',
+              onPress: deleteLocalOnly,
+            },
+            {
+              text: 'クラウドも削除',
+              style: 'destructive',
+              onPress: () => {
+                Alert.alert(
+                  '最終確認',
+                  'クラウドデータを削除すると、他のデバイスからもデータが消えます。本当に削除しますか？',
+                  [
+                    { text: 'キャンセル', style: 'cancel' },
+                    {
+                      text: '削除する',
+                      style: 'destructive',
+                      onPress: deleteLocalAndCloud,
+                    },
+                  ]
+                );
+              },
+            },
+          ]
+        );
+      }
     } else {
       // 未ログイン: ローカルのみ削除
       Alert.alert(
