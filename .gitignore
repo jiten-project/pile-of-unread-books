@@ -33,6 +33,7 @@ expo-env.d.ts
 # iOS
 *.ipa
 *.app
+app.app/
 *.dSYM
 *.dSYM.zip
 *.xcarchive
@@ -154,6 +155,9 @@ jest-results/
 
 # Sentry
 .sentryclirc
+
+# Serena (MCP tool cache)
+.serena/
 
 # Fastlane
 fastlane/report.xml

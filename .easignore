@@ -1,0 +1,45 @@
+# EAS Build - Files to ignore during upload
+
+# Build artifacts
+*.app
+*.ipa
+*.apk
+*.aab
+app.app/
+
+# Native directories (regenerated during build)
+ios/
+android/
+
+# Development files
+.expo/
+.serena/
+.claude/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Editor and IDE
+.vscode/
+.idea/
+
+# Credentials (handled by EAS)
+credentials/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test and coverage
+coverage/
+__tests__/
+
+# Logs
+*.log
+npm-debug.*
+
+# Large unnecessary files
+*.zip
+*.tar.gz
