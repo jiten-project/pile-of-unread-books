@@ -13,7 +13,7 @@ export default function PrivacyPolicyScreen() {
         プライバシーポリシー
       </Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2024年12月30日
+        最終更新日: 2026年1月25日
       </Text>
 
       <View style={styles.section}>
@@ -30,11 +30,26 @@ export default function PrivacyPolicyScreen() {
           収集する情報
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリは、以下の情報をユーザーのデバイス内にのみ保存します。{'\n\n'}
+          本アプリは、以下の情報をユーザーのデバイス内に保存します。{'\n\n'}
           • 書籍情報（タイトル、著者、ISBN等）{'\n'}
           • 読書状況（ステータス、読書日時等）{'\n'}
           • アプリ設定（テーマ、通知設定等）{'\n\n'}
-          これらの情報は外部サーバーには送信されません。
+          クラウド同期を有効にした場合、上記の書籍情報はApple IDに紐づいたクラウドサーバー（Supabase）にも保存されます。これにより、複数デバイス間でデータを同期できます。
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          クラウド同期機能（オプション）
+        </Text>
+        <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
+          バージョン1.1.0より、クラウド同期機能が追加されました。この機能は任意であり、サインインしない場合はデータはデバイス内にのみ保存されます。{'\n\n'}
+          クラウド同期を有効にした場合：{'\n'}
+          • Apple ID（Sign in with Apple）を使用して認証を行います{'\n'}
+          • 書籍データは暗号化された通信（HTTPS）でクラウドサーバーに送信されます{'\n'}
+          • データはSupabase（クラウドデータベースサービス）に保存されます{'\n'}
+          • データはユーザーのApple IDに紐づけられ、本人のみがアクセスできます{'\n\n'}
+          メールアドレスについて：Apple IDの「メールを非公開」機能を使用した場合、実際のメールアドレスは本アプリに共有されません。
         </Text>
       </View>
 
@@ -43,7 +58,13 @@ export default function PrivacyPolicyScreen() {
           外部サービスとの連携
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリは、書籍情報の取得のためにGoogle Books APIを利用する場合があります。この際、ISBN番号のみが送信され、個人を特定する情報は送信されません。
+          【書籍情報の取得】{'\n'}
+          • OpenBD API（日本の書籍情報）{'\n'}
+          • Google Books API（海外の書籍情報）{'\n'}
+          この際、ISBN番号のみが送信され、個人を特定する情報は送信されません。{'\n\n'}
+          【認証・データ保存（クラウド同期有効時のみ）】{'\n'}
+          • Sign in with Apple（Apple社の認証サービス）{'\n'}
+          • Supabase（クラウドデータベース）
         </Text>
       </View>
 
@@ -70,7 +91,27 @@ export default function PrivacyPolicyScreen() {
           データの保存と削除
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          すべてのデータはユーザーのデバイス内にのみ保存されます。アプリをアンインストールすると、保存されたデータはすべて削除されます。また、設定画面からデータを手動で削除することも可能です。
+          【ローカルデータ】{'\n'}
+          • デバイス内のデータは、アプリをアンインストールすると削除されます{'\n'}
+          • 設定画面の「すべてのデータを削除」機能を使用すると、ローカルデータが削除されます{'\n'}
+          • この操作ではクラウドデータは削除されません{'\n\n'}
+          【クラウドデータ（クラウド同期有効時）】{'\n'}
+          • サインアウトしてもクラウドデータは保持されます（再サインイン時に復元可能）{'\n'}
+          • 「すべてのデータを削除」実行時に「クラウドも削除」を選択すると、クラウドデータも削除されます{'\n'}
+          • 「ローカルのみ」を選択した場合、クラウドデータは保持されます{'\n'}
+          • アカウント削除を行うと、関連するクラウドデータもすべて削除されます
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          データのセキュリティ
+        </Text>
+        <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
+          クラウド同期機能では、以下のセキュリティ対策を実施しています。{'\n\n'}
+          • すべての通信はHTTPS（TLS暗号化）で保護されています{'\n'}
+          • Row Level Security（RLS）により、ユーザーは自分のデータにのみアクセスできます{'\n'}
+          • 認証にはAppleの安全な認証システムを使用しています
         </Text>
       </View>
 
@@ -79,7 +120,7 @@ export default function PrivacyPolicyScreen() {
           第三者への情報提供
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリは、ユーザーの個人情報を第三者に提供、販売、共有することはありません。
+          本アプリは、ユーザーの個人情報を第三者に提供、販売、共有することはありません。ただし、法令に基づく開示要請があった場合は、この限りではありません。
         </Text>
       </View>
 
@@ -88,7 +129,7 @@ export default function PrivacyPolicyScreen() {
           お子様のプライバシー
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリは年齢制限を設けておらず、個人情報を収集しないため、お子様も安心してご利用いただけます。
+          本アプリは年齢制限を設けていません。クラウド同期機能を使用しない場合、個人情報は収集されないため、お子様も安心してご利用いただけます。クラウド同期機能のご利用には、Apple IDが必要です。
         </Text>
       </View>
 

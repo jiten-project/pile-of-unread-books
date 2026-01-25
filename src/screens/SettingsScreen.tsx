@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { exportBooks, importBooks } from '../services';
 import { insertBooksInTransaction, getAllBooks, deleteAllBooks } from '../services/database';
+import { deleteAllBooksFromCloud } from '../services/cloudDatabase';
 import { AppNavigationProp } from '../types';
 import { useTheme, ThemeMode, useSettings, TSUNDOKU_PRESETS, TsundokuPresetKey, useAuth, useSyncContext } from '../contexts';
 
@@ -181,29 +182,75 @@ export default function SettingsScreen() {
       return;
     }
 
-    Alert.alert(
-      'すべてのデータを削除',
-      `本当に${books.length}冊のデータをすべて削除しますか？この操作は取り消せません。`,
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '削除する',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // データベースから全削除
-              await deleteAllBooks();
-              // メモリ上のストアもクリア
-              setBooks([]);
-              Alert.alert('完了', 'すべてのデータを削除しました');
-            } catch (error) {
-              Alert.alert('エラー', 'データの削除に失敗しました');
-              console.error(error);
-            }
+    const deleteLocalOnly = async () => {
+      try {
+        await deleteAllBooks();
+        setBooks([]);
+        Alert.alert('完了', 'ローカルデータを削除しました');
+      } catch (error) {
+        Alert.alert('エラー', 'データの削除に失敗しました');
+        console.error(error);
+      }
+    };
+
+    const deleteLocalAndCloud = async () => {
+      try {
+        await deleteAllBooks();
+        await deleteAllBooksFromCloud();
+        setBooks([]);
+        Alert.alert('完了', 'ローカルとクラウドのデータをすべて削除しました');
+      } catch (error) {
+        Alert.alert('エラー', 'データの削除に失敗しました');
+        console.error(error);
+      }
+    };
+
+    if (user) {
+      // ログイン中: クラウドデータも削除するか選択
+      Alert.alert(
+        'すべてのデータを削除',
+        `${books.length}冊のデータを削除します。クラウドデータも削除しますか？`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: 'ローカルのみ',
+            onPress: deleteLocalOnly,
           },
-        },
-      ]
-    );
+          {
+            text: 'クラウドも削除',
+            style: 'destructive',
+            onPress: () => {
+              Alert.alert(
+                '最終確認',
+                'クラウドデータを削除すると、他のデバイスからもデータが消えます。本当に削除しますか？',
+                [
+                  { text: 'キャンセル', style: 'cancel' },
+                  {
+                    text: '削除する',
+                    style: 'destructive',
+                    onPress: deleteLocalAndCloud,
+                  },
+                ]
+              );
+            },
+          },
+        ]
+      );
+    } else {
+      // 未ログイン: ローカルのみ削除
+      Alert.alert(
+        'すべてのデータを削除',
+        `本当に${books.length}冊のデータをすべて削除しますか？この操作は取り消せません。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '削除する',
+            style: 'destructive',
+            onPress: deleteLocalOnly,
+          },
+        ]
+      );
+    }
   };
 
   const themedStyles = {
@@ -549,7 +596,7 @@ export default function SettingsScreen() {
 
         <View style={[styles.infoRow, themedStyles.menuBorder]}>
           <Text style={[styles.infoLabel, themedStyles.infoLabel]}>バージョン</Text>
-          <Text style={[styles.infoValue, themedStyles.infoValue]}>1.0.0</Text>
+          <Text style={[styles.infoValue, themedStyles.infoValue]}>1.1.0</Text>
         </View>
 
         <View style={[styles.infoRow, themedStyles.menuBorder]}>
@@ -619,7 +666,7 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={[styles.footer, themedStyles.footer]}>
-        積読本管理 v1.0.0
+        積読本管理 v1.1.0
       </Text>
     </ScrollView>
   );
