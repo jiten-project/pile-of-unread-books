@@ -8,3 +8,5 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ErrorState } from './ErrorState';
 export { default as FilterModal } from './FilterModal';
 export type { FilterOptions } from './FilterModal';
+export { default as SyncIndicator } from './SyncIndicator';
+export { default as OfflineBanner } from './OfflineBanner';

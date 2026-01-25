@@ -135,6 +135,17 @@
       color: #666;
     }
 
+    .feature-item.new::before {
+      content: "NEW";
+      display: inline-block;
+      background: #0A84FF;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
     .link-list {
       list-style: none;
     }
@@ -177,6 +188,29 @@
     .link-list .arrow {
       margin-left: auto;
       color: #999;
+    }
+
+    .update-notes {
+      background: #e8f5e9;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .update-notes h3 {
+      color: #2e7d32;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .update-notes ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #555;
+    }
+
+    .update-notes li {
+      margin-bottom: 5px;
     }
 
     footer {
@@ -228,6 +262,21 @@
   </nav>
 
   <main class="container">
+    <section class="card">
+      <h2>バージョン 1.1.0 アップデート</h2>
+      <div class="update-notes">
+        <h3>🆕 新機能</h3>
+        <ul>
+          <li><strong>クラウド同期機能</strong> - Apple IDでサインインすると、複数デバイス間でデータを同期できます</li>
+          <li><strong>オフライン対応</strong> - インターネット接続がなくても、アプリは通常通り動作します</li>
+          <li><strong>自動バックアップ</strong> - クラウド同期を有効にすると、データが自動的にバックアップされます</li>
+        </ul>
+      </div>
+      <p style="color: #666; font-size: 14px;">
+        ※ クラウド同期は任意の機能です。サインインしなくても、従来通りローカルのみでご利用いただけます。
+      </p>
+    </section>
+
     <section id="features" class="card">
       <h2>主な機能</h2>
       <div class="feature-grid">
@@ -250,6 +299,16 @@
           <div class="icon">🔔</div>
           <h3>リマインダー</h3>
           <p>積読本の存在を定期的に通知</p>
+        </div>
+        <div class="feature-item new">
+          <div class="icon">☁️</div>
+          <h3>クラウド同期</h3>
+          <p>複数デバイス間でデータを同期</p>
+        </div>
+        <div class="feature-item new">
+          <div class="icon">🔐</div>
+          <h3>Apple ID連携</h3>
+          <p>安全で簡単なサインイン</p>
         </div>
       </div>
     </section>
@@ -314,7 +373,7 @@
       <table style="width: 100%; font-size: 14px;">
         <tr>
           <td style="padding: 10px 0; color: #666;">バージョン</td>
-          <td style="padding: 10px 0; text-align: right;">1.0.0</td>
+          <td style="padding: 10px 0; text-align: right;">1.1.0</td>
         </tr>
         <tr>
           <td style="padding: 10px 0; color: #666;">対応OS</td>
@@ -333,7 +392,7 @@
   </main>
 
   <footer>
-    <p>&copy; 2024 積読本管理. All rights reserved.</p>
+    <p>&copy; 2025 積読本管理. All rights reserved.</p>
   </footer>
 </body>
 </html>

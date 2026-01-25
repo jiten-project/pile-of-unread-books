@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import {
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { exportBooks, importBooks } from '../services';
 import { insertBooksInTransaction, getAllBooks, deleteAllBooks } from '../services/database';
 import { AppNavigationProp } from '../types';
-import { useTheme, ThemeMode, useSettings, TSUNDOKU_PRESETS, TsundokuPresetKey } from '../contexts';
+import { useTheme, ThemeMode, useSettings, TSUNDOKU_PRESETS, TsundokuPresetKey, useAuth, useSyncContext } from '../contexts';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
   { value: 'system', label: 'システム設定', icon: '📱' },
@@ -25,8 +28,77 @@ export default function SettingsScreen() {
   const navigation = useNavigation<AppNavigationProp>();
   const { colors, themeMode, setThemeMode } = useTheme();
   const { tsundokuDefinition, setTsundokuDefinition, currentPreset } = useSettings();
+  const { user, isLoading: isAuthLoading, isAppleAuthAvailable, signInWithApple, signOut } = useAuth();
+  const { syncState, lastSyncTime, triggerFullSync } = useSyncContext();
   const [isExporting, setIsExporting] = useState(false);
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
+
+  const handleManualSync = async () => {
+    setIsManualSyncing(true);
+    try {
+      await triggerFullSync();
+      Alert.alert('同期完了', 'データの同期が完了しました');
+    } catch (error) {
+      Alert.alert('同期エラー', '同期に失敗しました。後でもう一度お試しください。');
+      console.error('Manual sync error:', error);
+    } finally {
+      setIsManualSyncing(false);
+    }
+  };
+
+  const formatLastSyncTime = (date: Date | null): string => {
+    if (!date) return '未同期';
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'たった今';
+    if (minutes < 60) return `${minutes}分前`;
+    if (hours < 24) return `${hours}時間前`;
+    return `${days}日前`;
+  };
   const [isImporting, setIsImporting] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      await signInWithApple();
+    } catch (error) {
+      Alert.alert('サインインエラー', 'サインインに失敗しました。もう一度お試しください。');
+      console.error('Sign in error:', error);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'サインアウト',
+      'クラウド同期が無効になります。ローカルデータは保持されます。',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: 'サインアウト',
+          style: 'destructive',
+          onPress: async () => {
+            setIsSigningOut(true);
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('エラー', 'サインアウトに失敗しました');
+              console.error('Sign out error:', error);
+            } finally {
+              setIsSigningOut(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handlePresetSelect = (presetKey: TsundokuPresetKey) => {
     setTsundokuDefinition(TSUNDOKU_PRESETS[presetKey].definition);
@@ -188,6 +260,113 @@ export default function SettingsScreen() {
           ))}
         </View>
       </View>
+
+      {Platform.OS === 'ios' && (
+        <View style={[styles.section, themedStyles.section]}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>クラウド同期</Text>
+
+          {isAuthLoading ? (
+            <View style={styles.cloudSyncLoading}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : user ? (
+            <View style={styles.cloudSyncContent}>
+              <View style={[styles.syncStatus, { backgroundColor: colors.success + '20' }]}>
+                <Text style={[styles.syncStatusIcon]}>✓</Text>
+                <View style={styles.syncStatusText}>
+                  <Text style={[styles.syncStatusTitle, { color: colors.success }]}>
+                    同期が有効です
+                  </Text>
+                  <Text style={[styles.syncStatusEmail, { color: colors.textSecondary }]}>
+                    {user.email || 'Apple ID'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.syncInfoRow, { borderColor: colors.borderLight }]}>
+                <Text style={[styles.syncInfoLabel, { color: colors.textSecondary }]}>
+                  最終同期
+                </Text>
+                <Text style={[styles.syncInfoValue, { color: colors.textPrimary }]}>
+                  {syncState === 'syncing' ? '同期中...' : formatLastSyncTime(lastSyncTime)}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.syncButton, { backgroundColor: colors.primary }]}
+                onPress={handleManualSync}
+                disabled={isManualSyncing || syncState === 'syncing'}
+                activeOpacity={0.7}
+              >
+                {isManualSyncing || syncState === 'syncing' ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.syncButtonText}>今すぐ同期</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.signOutButton, { borderColor: colors.border }]}
+                onPress={handleSignOut}
+                disabled={isSigningOut}
+                activeOpacity={0.7}
+              >
+                {isSigningOut ? (
+                  <ActivityIndicator size="small" color={colors.error} />
+                ) : (
+                  <Text style={[styles.signOutButtonText, { color: colors.error }]}>
+                    サインアウト
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.cloudSyncContent}>
+              <Text style={[styles.cloudSyncDescription, { color: colors.textSecondary }]}>
+                Appleでサインインすると、複数のデバイス間でデータを同期できます。
+              </Text>
+
+              <View style={styles.cloudSyncFeatures}>
+                <Text style={[styles.cloudSyncFeature, { color: colors.textTertiary }]}>
+                  ・iPhone/iPad間でデータを同期
+                </Text>
+                <Text style={[styles.cloudSyncFeature, { color: colors.textTertiary }]}>
+                  ・デバイス紛失時のバックアップ
+                </Text>
+                <Text style={[styles.cloudSyncFeature, { color: colors.textTertiary }]}>
+                  ・機種変更時も簡単にデータ移行
+                </Text>
+              </View>
+
+              {isAppleAuthAvailable ? (
+                <View style={styles.appleButtonContainer}>
+                  {isSigningIn ? (
+                    <View style={[styles.appleButtonLoading, { backgroundColor: colors.textPrimary }]}>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </View>
+                  ) : (
+                    <AppleAuthentication.AppleAuthenticationButton
+                      buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                      buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                      cornerRadius={8}
+                      style={styles.appleButton}
+                      onPress={handleSignIn}
+                    />
+                  )}
+                </View>
+              ) : (
+                <Text style={[styles.cloudSyncUnavailable, { color: colors.textTertiary }]}>
+                  このデバイスではAppleサインインを利用できません
+                </Text>
+              )}
+
+              <Text style={[styles.cloudSyncNote, { color: colors.textTertiary }]}>
+                ※ サインインしなくてもアプリは使えます
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
 
       <View style={[styles.section, themedStyles.section]}>
         <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>積読の定義</Text>
@@ -588,5 +767,109 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     marginTop: 24,
+  },
+  cloudSyncLoading: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  cloudSyncContent: {
+    padding: 16,
+  },
+  cloudSyncDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  cloudSyncFeatures: {
+    marginBottom: 16,
+  },
+  cloudSyncFeature: {
+    fontSize: 13,
+    lineHeight: 22,
+  },
+  appleButtonContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  appleButton: {
+    width: 280,
+    height: 44,
+  },
+  appleButtonLoading: {
+    width: 280,
+    height: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cloudSyncNote: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  cloudSyncUnavailable: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  syncStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  syncStatusIcon: {
+    fontSize: 20,
+    color: '#4CAF50',
+    marginRight: 12,
+  },
+  syncStatusText: {
+    flex: 1,
+  },
+  syncStatusTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  syncStatusEmail: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  signOutButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  signOutButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  syncInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    marginBottom: 12,
+  },
+  syncInfoLabel: {
+    fontSize: 14,
+  },
+  syncInfoValue: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  syncButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  syncButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
