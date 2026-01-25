@@ -179,6 +179,8 @@ export async function insertBook(book: Book): Promise<void> {
     book.currentPage ?? null,
     book.createdAt,
     book.updatedAt,
+    book.syncStatus ?? 'pending',
+    book.ownerUserId ?? null,
   ];
 
   await db.runAsync(
@@ -187,8 +189,8 @@ export async function insertBook(book: Book): Promise<void> {
       page_count, thumbnail_url, categories, status, priority, condition,
       purchase_date, purchase_place, purchase_price, purchase_reason,
       tags, notes, start_date, completed_date, current_page,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      created_at, updated_at, sync_status, owner_user_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       isbn = excluded.isbn,
       title = excluded.title,
@@ -211,7 +213,9 @@ export async function insertBook(book: Book): Promise<void> {
       start_date = excluded.start_date,
       completed_date = excluded.completed_date,
       current_page = excluded.current_page,
-      updated_at = excluded.updated_at`,
+      updated_at = excluded.updated_at,
+      sync_status = excluded.sync_status,
+      owner_user_id = excluded.owner_user_id`,
     params
   );
 }
@@ -252,7 +256,8 @@ export async function updateBook(book: Book): Promise<void> {
       description = ?, page_count = ?, thumbnail_url = ?, categories = ?,
       status = ?, priority = ?, condition = ?, purchase_date = ?, purchase_place = ?,
       purchase_price = ?, purchase_reason = ?, tags = ?, notes = ?,
-      start_date = ?, completed_date = ?, current_page = ?, updated_at = ?
+      start_date = ?, completed_date = ?, current_page = ?, updated_at = ?,
+      sync_status = ?, owner_user_id = ?
     WHERE id = ?`,
     [
       book.isbn ?? null,
@@ -277,6 +282,8 @@ export async function updateBook(book: Book): Promise<void> {
       book.completedDate ?? null,
       book.currentPage ?? null,
       book.updatedAt,
+      book.syncStatus ?? 'pending',
+      book.ownerUserId ?? null,
       book.id,
     ]
   );

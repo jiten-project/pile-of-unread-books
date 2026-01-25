@@ -66,8 +66,8 @@ export function useSync(): UseSyncReturn {
       setLastSyncResult(result);
       lastSyncTimeRef.current = now;
 
-      // 同期後にローカルデータを再読み込み
-      if (result.downloaded > 0) {
+      // 同期後にローカルデータを再読み込み（ダウンロードまたは削除があった場合）
+      if (result.downloaded > 0 || result.deleted > 0) {
         const books = await getAllBooks();
         setBooks(books);
       }
@@ -81,6 +81,7 @@ export function useSync(): UseSyncReturn {
         success: false,
         uploaded: 0,
         downloaded: 0,
+        deleted: 0,
         conflicts: 0,
         errors: [String(error)],
       };

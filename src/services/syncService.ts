@@ -22,6 +22,7 @@ export interface SyncResult {
   success: boolean;
   uploaded: number;
   downloaded: number;
+  deleted: number;  // リモートで削除された本のローカル削除数
   conflicts: number;
   errors: string[];
 }
@@ -46,6 +47,7 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
     success: false,
     uploaded: 0,
     downloaded: 0,
+    deleted: 0,
     conflicts: 0,
     errors: [],
   };
@@ -96,8 +98,21 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
     for (const localBook of localBooks) {
       const cloudBook = cloudBooksMap.get(localBook.id);
       if (!cloudBook) {
-        // クラウドにない → アップロード
-        booksToUpload.push(localBook);
+        // クラウドにない
+        // 以前同期済み（synced）かつ現在のユーザーの本 → 別デバイスで削除された
+        // それ以外（pending/error/未所有） → 新規追加なのでアップロード
+        if (localBook.syncStatus === 'synced' && localBook.ownerUserId === userId) {
+          // 別デバイスで削除された本 → ローカルからも削除
+          try {
+            await hardDeleteBook(localBook.id);
+            result.deleted++;
+          } catch (error) {
+            result.errors.push(`ローカル削除に失敗 (${localBook.title}): ${error instanceof Error ? error.message : String(error)}`);
+          }
+        } else {
+          // 新規追加の本 → アップロード
+          booksToUpload.push(localBook);
+        }
       } else {
         // 両方にある → 競合解決
         const winner = resolveConflict(localBook, cloudBook);
@@ -184,6 +199,7 @@ export async function performIncrementalSync(userId: string): Promise<SyncResult
     success: false,
     uploaded: 0,
     downloaded: 0,
+    deleted: 0,
     conflicts: 0,
     errors: [],
   };
