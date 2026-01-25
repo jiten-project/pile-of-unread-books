@@ -26,12 +26,29 @@ export function parsePrice(value: string): number | undefined {
 }
 
 /**
- * 指定日からの経過日数を計算
+ * 指定日からの経過日数を計算（日本時間基準）
  */
 export function getDaysSince(dateString: string): number {
+  // 日本時間 (JST = UTC+9) で日付のみを比較
+  const JST_OFFSET = 9 * 60; // 分単位
+
   const date = new Date(dateString);
   const now = new Date();
-  const diff = now.getTime() - date.getTime();
+
+  // 各日付をJSTの日付のみ（時刻を除く）に変換
+  const getJSTDateOnly = (d: Date): number => {
+    const utcTime = d.getTime() + d.getTimezoneOffset() * 60 * 1000;
+    const jstTime = utcTime + JST_OFFSET * 60 * 1000;
+    const jstDate = new Date(jstTime);
+    // 時刻を0:00:00にリセット
+    jstDate.setHours(0, 0, 0, 0);
+    return jstDate.getTime();
+  };
+
+  const dateJST = getJSTDateOnly(date);
+  const nowJST = getJSTDateOnly(now);
+
+  const diff = nowJST - dateJST;
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 

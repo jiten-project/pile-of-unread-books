@@ -85,10 +85,14 @@ export default function HomeScreen() {
       .filter(b => isTsundoku(b.status) && b.purchasePrice)
       .reduce((sum, b) => sum + (b.purchasePrice || 0), 0);
 
-    // ユーザー定義に基づく最も古い積読本
+    // ユーザー定義に基づく最も古い積読本（購入日基準、なければ登録日）
     const oldestTsundoku = books
       .filter(b => isTsundoku(b.status))
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
+      .sort((a, b) => {
+        const dateA = a.purchaseDate || a.createdAt;
+        const dateB = b.purchaseDate || b.createdAt;
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+      })[0];
 
     return {
       unread,
@@ -233,7 +237,7 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.oldestDays, themedStyles.oldestDays]}>
               <Text style={[styles.oldestDaysValue, themedStyles.oldestDaysValue]}>
-                {getDaysSince(stats.oldestTsundoku.createdAt)}
+                {getDaysSince(stats.oldestTsundoku.purchaseDate || stats.oldestTsundoku.createdAt)}
               </Text>
               <Text style={[styles.oldestDaysLabel, themedStyles.oldestDaysLabel]}>日</Text>
             </View>
