@@ -270,7 +270,12 @@ export default function SettingsScreen() {
                       style: 'destructive',
                       onPress: async () => {
                         await deleteLocalOnly();
-                        signOut();
+                        try {
+                          await signOut();
+                        } catch (error) {
+                          Alert.alert('エラー', 'サインアウトに失敗しました');
+                          console.error('Sign out failed:', error);
+                        }
                       },
                     },
                   ]
