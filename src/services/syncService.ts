@@ -15,8 +15,33 @@ import {
   upsertBooksToCloud,
   deleteBookFromCloud,
 } from './cloudDatabase';
+import { SUBSCRIPTION } from '../constants';
 
 export type SyncState = 'idle' | 'syncing' | 'error' | 'offline';
+
+/**
+ * 同期対象の本を選定（上限考慮）
+ * 登録日が古い順に上限まで選定
+ * local_only の本も含めることで、容量が空いた時に再同期対象に戻れるようにする
+ * @returns 同期可能な本のIDセット
+ */
+function getSyncEligibleBookIds(books: Book[], isPremium: boolean = false): Set<string> {
+  const limit = isPremium ? Infinity : SUBSCRIPTION.FREE_CLOUD_SYNC_LIMIT;
+
+  // pending_delete のみ除外し、登録日順にソート
+  // local_only も含めることで、容量が空いた時に再同期対象になれる
+  const eligibleBooks = books
+    .filter(b => b.syncStatus !== 'pending_delete')
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  // 上限までのIDをセットに追加
+  const eligibleIds = new Set<string>();
+  for (let i = 0; i < Math.min(eligibleBooks.length, limit); i++) {
+    eligibleIds.add(eligibleBooks[i].id);
+  }
+
+  return eligibleIds;
+}
 
 export interface SyncResult {
   success: boolean;
@@ -83,6 +108,27 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
     );
     const localBooksMap = new Map(localBooks.map(b => [b.id, b]));
 
+    // クラウド同期上限チェック（プレミアムは無制限）
+    const isPremium = false; // TODO: 将来的にはユーザー情報から取得
+    const syncEligibleIds = getSyncEligibleBookIds(localBooks, isPremium);
+
+    // 同期ステータスを更新
+    // - 上限超過の本を local_only としてマーク
+    // - 上限内に戻った local_only の本を pending に昇格
+    for (const book of localBooks) {
+      if (syncEligibleIds.has(book.id)) {
+        // 上限内: local_only だった本は pending に昇格して同期対象に戻す
+        if (book.syncStatus === 'local_only') {
+          await updateSyncStatus(book.id, 'pending', userId);
+        }
+      } else {
+        // 上限超過: local_only でなければ local_only にマーク
+        if (book.syncStatus !== 'local_only') {
+          await updateSyncStatus(book.id, 'local_only', userId);
+        }
+      }
+    }
+
     // 2. クラウドの全データを取得
     let cloudBooks: Book[] = [];
     let cloudFetchSuccess = false;
@@ -99,6 +145,11 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
     // 3. ローカルにあってクラウドにない、または更新が必要な本を特定
     const booksToUpload: Book[] = [];
     for (const localBook of localBooks) {
+      // 同期対象外（上限超過）の本はスキップ
+      if (!syncEligibleIds.has(localBook.id)) {
+        continue;
+      }
+
       const cloudBook = cloudBooksMap.get(localBook.id);
       if (!cloudBook) {
         // クラウドにない
@@ -222,13 +273,43 @@ export async function performIncrementalSync(userId: string): Promise<SyncResult
       }
     }
 
+    // 全ての本を取得して同期対象を判定
+    const allLocalBooks = await getAllBooks();
+    const localBooks = allLocalBooks.filter(book =>
+      (!book.ownerUserId || book.ownerUserId === userId) &&
+      book.syncStatus !== 'pending_delete'
+    );
+
+    // クラウド同期上限チェック（プレミアムは無制限）
+    const isPremium = false; // TODO: 将来的にはユーザー情報から取得
+    const syncEligibleIds = getSyncEligibleBookIds(localBooks, isPremium);
+
     // 同期が必要な本を取得
     const allBooksNeedingSync = await getBooksNeedingSync();
 
     // セキュリティ: 現在のユーザーが所有する本、または未所有の本のみをアップロード
+    // さらに、同期対象（上限内）の本のみをフィルタ
     const booksNeedingSync = allBooksNeedingSync.filter(book =>
-      !book.ownerUserId || book.ownerUserId === userId
+      (!book.ownerUserId || book.ownerUserId === userId) &&
+      syncEligibleIds.has(book.id)
     );
+
+    // 同期ステータスを更新
+    // - 上限超過の本を local_only としてマーク
+    // - 上限内に戻った local_only の本を pending に昇格
+    for (const book of localBooks) {
+      if (syncEligibleIds.has(book.id)) {
+        // 上限内: local_only だった本は pending に昇格して同期対象に戻す
+        if (book.syncStatus === 'local_only') {
+          await updateSyncStatus(book.id, 'pending', userId);
+        }
+      } else {
+        // 上限超過: local_only でなければ local_only にマーク
+        if (book.syncStatus !== 'local_only') {
+          await updateSyncStatus(book.id, 'local_only', userId);
+        }
+      }
+    }
 
     if (booksNeedingSync.length === 0) {
       result.success = true;
@@ -251,7 +332,7 @@ export async function performIncrementalSync(userId: string): Promise<SyncResult
 
       // 失敗した本のステータスを error に
       for (const book of booksNeedingSync) {
-        await updateSyncStatus(book.id, 'error');
+        await updateSyncStatus(book.id, 'error', userId);
       }
     }
   } catch (error) {

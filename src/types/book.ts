@@ -9,7 +9,8 @@ export type BookCondition = 'new' | 'used' | 'ebook' | 'other';
 
 // 同期ステータス
 // pending_delete: ローカルで削除済み、クラウドへの削除待ち
-export type SyncStatus = 'synced' | 'pending' | 'error' | 'pending_delete';
+// local_only: クラウド同期上限超過のためローカルのみ保存
+export type SyncStatus = 'synced' | 'pending' | 'error' | 'pending_delete' | 'local_only';
 
 // 書籍の基本情報（API から取得）
 export interface BookInfo {
