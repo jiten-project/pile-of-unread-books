@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAuth } from '../contexts';
 import { useBookStore } from '../store';
@@ -11,6 +11,7 @@ import {
   performInitialSync,
 } from '../services/syncService';
 import { useNetworkStatus } from './useNetworkStatus';
+import { SUBSCRIPTION } from '../constants';
 
 // 同期の最小間隔（ミリ秒）
 const MIN_SYNC_INTERVAL = 30000; // 30秒
@@ -22,6 +23,11 @@ export interface UseSyncReturn {
   isSyncEnabled: boolean;
   triggerSync: () => Promise<void>;
   triggerFullSync: () => Promise<void>;
+  // クラウド同期制限関連
+  isPremium: boolean;
+  cloudSyncLimit: number;
+  cloudSyncCount: number;
+  canSyncMore: boolean;
 }
 
 /**
@@ -29,8 +35,20 @@ export interface UseSyncReturn {
  */
 export function useSync(): UseSyncReturn {
   const { user } = useAuth();
-  const { setBooks } = useBookStore();
+  const { books, setBooks } = useBookStore();
   const { isOnline, wasOffline, clearWasOffline } = useNetworkStatus();
+
+  // プレミアム状態（将来的にはAsyncStorageから取得）
+  const isPremium = false;
+
+  // クラウド同期制限の計算
+  const cloudSyncLimit = isPremium ? Infinity : SUBSCRIPTION.FREE_CLOUD_SYNC_LIMIT;
+  const cloudSyncCount = useMemo(() => {
+    return books.filter(b =>
+      b.syncStatus === 'synced' || b.syncStatus === 'pending'
+    ).length;
+  }, [books]);
+  const canSyncMore = cloudSyncCount < cloudSyncLimit;
 
   const [syncState, setSyncState] = useState<SyncState>('idle');
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -66,10 +84,11 @@ export function useSync(): UseSyncReturn {
       setLastSyncResult(result);
       lastSyncTimeRef.current = now;
 
-      // 同期後にローカルデータを再読み込み（ダウンロードまたは削除があった場合）
-      if (result.downloaded > 0 || result.deleted > 0) {
-        const books = await getAllBooks();
-        setBooks(books);
+      // 同期後にローカルデータを再読み込み
+      // ステータス変更（local_onlyへの変更など）も反映するため、成功時は常に再読み込み
+      if (result.success) {
+        const updatedBooks = await getAllBooks();
+        setBooks(updatedBooks);
       }
 
       setSyncState(result.success ? 'idle' : 'error');
@@ -186,5 +205,10 @@ export function useSync(): UseSyncReturn {
     isSyncEnabled,
     triggerSync,
     triggerFullSync,
+    // クラウド同期制限関連
+    isPremium,
+    cloudSyncLimit,
+    cloudSyncCount,
+    canSyncMore,
   };
 }

@@ -30,7 +30,7 @@ export default function SettingsScreen() {
   const { colors, themeMode, setThemeMode } = useTheme();
   const { tsundokuDefinition, setTsundokuDefinition, currentPreset } = useSettings();
   const { user, isLoading: isAuthLoading, isAppleAuthAvailable, signInWithApple, signOut } = useAuth();
-  const { syncState, lastSyncTime, triggerFullSync } = useSyncContext();
+  const { syncState, lastSyncTime, triggerFullSync, cloudSyncCount, cloudSyncLimit, isPremium } = useSyncContext();
   const [isExporting, setIsExporting] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
 
@@ -405,6 +405,27 @@ export default function SettingsScreen() {
                   {syncState === 'syncing' ? '同期中...' : formatLastSyncTime(lastSyncTime)}
                 </Text>
               </View>
+
+              <View style={[styles.syncInfoRow, { borderColor: colors.borderLight }]}>
+                <Text style={[styles.syncInfoLabel, { color: colors.textSecondary }]}>
+                  クラウド同期
+                </Text>
+                <Text style={[styles.syncInfoValue, { color: colors.textPrimary }]}>
+                  {isPremium ? (
+                    `${cloudSyncCount}冊（無制限）`
+                  ) : (
+                    `${cloudSyncCount} / ${cloudSyncLimit}冊`
+                  )}
+                </Text>
+              </View>
+
+              {!isPremium && cloudSyncCount >= cloudSyncLimit && (
+                <View style={[styles.syncLimitWarning, { backgroundColor: colors.warning + '20' }]}>
+                  <Text style={[styles.syncLimitWarningText, { color: colors.warning }]}>
+                    クラウド同期の上限に達しました。新しい本はローカルのみに保存されます。
+                  </Text>
+                </View>
+              )}
 
               <TouchableOpacity
                 style={[styles.syncButton, { backgroundColor: colors.primary }]}
@@ -985,5 +1006,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  syncLimitWarning: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  syncLimitWarningText: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });
