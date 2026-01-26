@@ -22,14 +22,16 @@ export type SyncState = 'idle' | 'syncing' | 'error' | 'offline';
 /**
  * 同期対象の本を選定（上限考慮）
  * 登録日が古い順に上限まで選定
+ * local_only の本も含めることで、容量が空いた時に再同期対象に戻れるようにする
  * @returns 同期可能な本のIDセット
  */
 function getSyncEligibleBookIds(books: Book[], isPremium: boolean = false): Set<string> {
   const limit = isPremium ? Infinity : SUBSCRIPTION.FREE_CLOUD_SYNC_LIMIT;
 
-  // local_only と pending_delete を除外し、登録日順にソート
+  // pending_delete のみ除外し、登録日順にソート
+  // local_only も含めることで、容量が空いた時に再同期対象になれる
   const eligibleBooks = books
-    .filter(b => b.syncStatus !== 'pending_delete' && b.syncStatus !== 'local_only')
+    .filter(b => b.syncStatus !== 'pending_delete')
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   // 上限までのIDをセットに追加
@@ -110,10 +112,20 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
     const isPremium = false; // TODO: 将来的にはユーザー情報から取得
     const syncEligibleIds = getSyncEligibleBookIds(localBooks, isPremium);
 
-    // 上限超過の本を local_only としてマーク
+    // 同期ステータスを更新
+    // - 上限超過の本を local_only としてマーク
+    // - 上限内に戻った local_only の本を pending に昇格
     for (const book of localBooks) {
-      if (!syncEligibleIds.has(book.id) && book.syncStatus !== 'local_only') {
-        await updateSyncStatus(book.id, 'local_only', userId);
+      if (syncEligibleIds.has(book.id)) {
+        // 上限内: local_only だった本は pending に昇格して同期対象に戻す
+        if (book.syncStatus === 'local_only') {
+          await updateSyncStatus(book.id, 'pending', userId);
+        }
+      } else {
+        // 上限超過: local_only でなければ local_only にマーク
+        if (book.syncStatus !== 'local_only') {
+          await updateSyncStatus(book.id, 'local_only', userId);
+        }
       }
     }
 
@@ -282,10 +294,20 @@ export async function performIncrementalSync(userId: string): Promise<SyncResult
       syncEligibleIds.has(book.id)
     );
 
-    // 上限超過の本を local_only としてマーク
-    for (const book of allBooksNeedingSync) {
-      if (!syncEligibleIds.has(book.id) && book.syncStatus !== 'local_only') {
-        await updateSyncStatus(book.id, 'local_only', userId);
+    // 同期ステータスを更新
+    // - 上限超過の本を local_only としてマーク
+    // - 上限内に戻った local_only の本を pending に昇格
+    for (const book of localBooks) {
+      if (syncEligibleIds.has(book.id)) {
+        // 上限内: local_only だった本は pending に昇格して同期対象に戻す
+        if (book.syncStatus === 'local_only') {
+          await updateSyncStatus(book.id, 'pending', userId);
+        }
+      } else {
+        // 上限超過: local_only でなければ local_only にマーク
+        if (book.syncStatus !== 'local_only') {
+          await updateSyncStatus(book.id, 'local_only', userId);
+        }
       }
     }
 
