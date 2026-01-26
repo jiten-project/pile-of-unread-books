@@ -84,10 +84,11 @@ export function useSync(): UseSyncReturn {
       setLastSyncResult(result);
       lastSyncTimeRef.current = now;
 
-      // 同期後にローカルデータを再読み込み（ダウンロードまたは削除があった場合）
-      if (result.downloaded > 0 || result.deleted > 0) {
-        const books = await getAllBooks();
-        setBooks(books);
+      // 同期後にローカルデータを再読み込み
+      // ステータス変更（local_onlyへの変更など）も反映するため、成功時は常に再読み込み
+      if (result.success) {
+        const updatedBooks = await getAllBooks();
+        setBooks(updatedBooks);
       }
 
       setSyncState(result.success ? 'idle' : 'error');
