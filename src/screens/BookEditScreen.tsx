@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { FormInput, SelectInput, TagInput } from '../components';
+import { FormInput, SelectInput, TagInput, DateInput } from '../components';
 import { usePersistBook } from '../hooks';
 import { useBookStore } from '../store';
 import { BookStatus, Priority, BookCondition, RootStackParamList, RootStackNavigationProp } from '../types';
@@ -241,11 +241,11 @@ export default function BookEditScreen() {
           keyboardType="numeric"
         />
 
-        <FormInput
+        <DateInput
           label="出版日"
           value={formData.publishedDate}
-          onChangeText={v => updateField('publishedDate', v)}
-          placeholder="例: 2024-01-01"
+          onChange={v => updateField('publishedDate', v)}
+          placeholder="日付を選択"
         />
 
         <FormInput
@@ -281,11 +281,11 @@ export default function BookEditScreen() {
           onChange={v => updateField('condition', v)}
         />
 
-        <FormInput
+        <DateInput
           label="購入日"
           value={formData.purchaseDate}
-          onChangeText={v => updateField('purchaseDate', v)}
-          placeholder="例: 2024-01-01"
+          onChange={v => updateField('purchaseDate', v)}
+          placeholder="日付を選択"
         />
 
         <FormInput

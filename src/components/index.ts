@@ -1,6 +1,7 @@
 export { default as FormInput } from './FormInput';
 export { default as SelectInput } from './SelectInput';
 export { default as TagInput } from './TagInput';
+export { default as DateInput } from './DateInput';
 export { default as BookCard } from './BookCard';
 export { default as BookGridItem } from './BookGridItem';
 export { default as EmptyState } from './EmptyState';
