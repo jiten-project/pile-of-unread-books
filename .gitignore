@@ -1,35 +1,49 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# ===================================
+# Dependencies
+# ===================================
 node_modules/
+.pnp/
+.pnp.js
 
-# Expo
+# ===================================
+# Expo / React Native
+# ===================================
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
-.kotlin/
-*.orig.*
+# Generated native folders (managed by Expo)
+/ios/
+/android/
 
-# Metro
+# Native build artifacts
+*.orig.*
+.kotlin/
+
+# Metro bundler
 .metro-health-check*
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# ===================================
+# Build Artifacts
+# ===================================
 
-# macOS
-.DS_Store
+# iOS
+*.ipa
+*.app
+app.app/
+*.dSYM
+*.dSYM.zip
+*.xcarchive
 
-# typescript
-*.tsbuildinfo
+# Android
+*.apk
+*.aab
 
-# generated native folders
-/ios
-/android
+# Build output
+build/
 
 # ===================================
 # Security - Credentials & Secrets
@@ -38,8 +52,7 @@ yarn-error.*
 # Environment files
 .env
 .env.*
-.env*.local
-*.env
+!.env.example
 
 # Signing keys and certificates
 *.jks
@@ -55,40 +68,22 @@ yarn-error.*
 # EAS credentials
 credentials.json
 credentials/
+eas-credentials/
 
-# API keys
+# API keys and secrets
 **/secrets/
 **/private_keys/
 .appstoreconnect/
 
 # ===================================
-# Build artifacts
-# ===================================
-
-# iOS builds
-*.ipa
-*.app
-*.dSYM
-*.dSYM.zip
-*.xcarchive
-
-# Android builds
-*.apk
-*.aab
-
-# Build output directories
-build/
-build-*.ipa
-build-*.apk
-
-# ===================================
 # IDE and Editor
 # ===================================
 
-# VSCode
-.vscode/
+# VSCode (keep shared settings)
+.vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+!.vscode/launch.json
 
 # JetBrains
 .idea/
@@ -100,14 +95,43 @@ build-*.apk
 *~
 
 # ===================================
-# Logs and Temp files
+# OS Generated
+# ===================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+
+# ===================================
+# Logs and Debug
 # ===================================
 
 *.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 logs/
+
+# ===================================
+# Cache and Temp
+# ===================================
+
+.cache/
 tmp/
 temp/
-.cache/
+*.tsbuildinfo
 
 # ===================================
 # Testing
@@ -115,6 +139,15 @@ temp/
 
 coverage/
 .nyc_output/
+jest-results/
+
+# ===================================
+# Package Manager Locks (optional)
+# ===================================
+
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
 
 # ===================================
 # Miscellaneous
@@ -123,8 +156,14 @@ coverage/
 # Sentry
 .sentryclirc
 
+# Serena (MCP tool cache)
+.serena/
+
 # Fastlane
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots
-fastlane/test_output
+fastlane/screenshots/
+fastlane/test_output/
+
+# Patch files (keep patches directory)
+!patches/

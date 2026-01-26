@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { FormInput, SelectInput, TagInput } from '../components';
+import { FormInput, SelectInput, TagInput, DateInput } from '../components';
 import { usePersistBook } from '../hooks';
 import { useBookStore } from '../store';
 import { BookStatus, Priority, BookCondition, RootStackParamList, RootStackNavigationProp } from '../types';
@@ -30,6 +30,7 @@ interface FormData {
   status: BookStatus;
   priority: Priority;
   condition: BookCondition;
+  purchaseDate: string;
   purchasePlace: string;
   purchasePrice: string;
   purchaseReason: string;
@@ -80,6 +81,7 @@ export default function BookEditScreen() {
     status: 'unread',
     priority: 'medium',
     condition: 'new',
+    purchaseDate: '',
     purchasePlace: '',
     purchasePrice: '',
     purchaseReason: '',
@@ -91,6 +93,13 @@ export default function BookEditScreen() {
 
   useEffect(() => {
     if (book) {
+      // ISO文字列からYYYY-MM-DD形式に変換
+      const formatDateForInput = (isoString?: string): string => {
+        if (!isoString) return '';
+        const date = new Date(isoString);
+        return date.toISOString().split('T')[0];
+      };
+
       setFormData({
         title: book.title,
         authors: book.authors.join(', '),
@@ -101,6 +110,7 @@ export default function BookEditScreen() {
         status: book.status,
         priority: book.priority,
         condition: book.condition || 'new',
+        purchaseDate: formatDateForInput(book.purchaseDate),
         purchasePlace: book.purchasePlace || '',
         purchasePrice: book.purchasePrice?.toString() || '',
         purchaseReason: book.purchaseReason || '',
@@ -151,6 +161,13 @@ export default function BookEditScreen() {
 
     setIsSubmitting(true);
     try {
+      // YYYY-MM-DD形式をISO文字列に変換
+      const parsePurchaseDate = (dateStr: string): string | undefined => {
+        if (!dateStr.trim()) return undefined;
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toISOString();
+      };
+
       await updateBook(bookId, {
         title: formData.title.trim(),
         authors: formData.authors.split(',').map(a => a.trim()).filter(Boolean),
@@ -161,6 +178,7 @@ export default function BookEditScreen() {
         status: formData.status,
         priority: formData.priority,
         condition: formData.condition,
+        purchaseDate: parsePurchaseDate(formData.purchaseDate),
         purchasePlace: formData.purchasePlace.trim() || undefined,
         purchasePrice: parsePrice(formData.purchasePrice),
         purchaseReason: formData.purchaseReason.trim() || undefined,
@@ -223,11 +241,11 @@ export default function BookEditScreen() {
           keyboardType="numeric"
         />
 
-        <FormInput
+        <DateInput
           label="出版日"
           value={formData.publishedDate}
-          onChangeText={v => updateField('publishedDate', v)}
-          placeholder="例: 2024-01-01"
+          onChange={v => updateField('publishedDate', v)}
+          placeholder="日付を選択"
         />
 
         <FormInput
@@ -261,6 +279,13 @@ export default function BookEditScreen() {
           options={conditionOptions}
           value={formData.condition}
           onChange={v => updateField('condition', v)}
+        />
+
+        <DateInput
+          label="購入日"
+          value={formData.purchaseDate}
+          onChange={v => updateField('purchaseDate', v)}
+          placeholder="日付を選択"
         />
 
         <FormInput

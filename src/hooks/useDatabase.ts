@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { initDatabase, getAllBooks, insertBook, updateBook, deleteBook } from '../services/database';
+import { useEffect, useState, useCallback } from 'react';
+import { initDatabase, getAllBooks, insertBook, updateBook, deleteBook, updateSyncStatus } from '../services/database';
+import { deleteBookWithSync } from '../services/syncService';
 import { useBookStore } from '../store';
 import { Book } from '../types';
+import { useAuth } from '../contexts';
 
 export function useDatabase() {
   const [isReady, setIsReady] = useState(false);
@@ -31,33 +33,53 @@ export function useDatabase() {
 
 export function usePersistBook() {
   const store = useBookStore();
+  const { user } = useAuth();
 
-  const addBookWithPersist = async (input: Parameters<typeof store.addBook>[0]) => {
+  const addBookWithPersist = useCallback(async (input: Parameters<typeof store.addBook>[0]) => {
     const book = store.addBook(input);
-    await insertBook(book);
+    // 同期が有効な場合は pending ステータスで保存
+    const bookWithSync: Book = {
+      ...book,
+      syncStatus: user ? 'pending' : undefined,
+      ownerUserId: user?.id,
+    };
+    await insertBook(bookWithSync);
     return book;
-  };
+  }, [store, user]);
 
-  const updateBookWithPersist = async (id: string, input: Parameters<typeof store.updateBook>[1]) => {
+  const updateBookWithPersist = useCallback(async (id: string, input: Parameters<typeof store.updateBook>[1]) => {
     store.updateBook(id, input);
     const updatedBook = store.getBookById(id);
     if (updatedBook) {
       await updateBook(updatedBook);
+      // 同期が有効な場合は pending にマーク
+      if (user) {
+        await updateSyncStatus(id, 'pending', user.id);
+      }
     }
-  };
+  }, [store, user]);
 
-  const deleteBookWithPersist = async (id: string) => {
+  const deleteBookWithPersist = useCallback(async (id: string) => {
     store.deleteBook(id);
-    await deleteBook(id);
-  };
+    // 同期が有効な場合はクラウドからも削除
+    if (user) {
+      await deleteBookWithSync(id);
+    } else {
+      await deleteBook(id);
+    }
+  }, [store, user]);
 
-  const updateStatusWithPersist = async (id: string, status: Book['status']) => {
+  const updateStatusWithPersist = useCallback(async (id: string, status: Book['status']) => {
     store.updateStatus(id, status);
     const updatedBook = store.getBookById(id);
     if (updatedBook) {
       await updateBook(updatedBook);
+      // 同期が有効な場合は pending にマーク
+      if (user) {
+        await updateSyncStatus(id, 'pending', user.id);
+      }
     }
-  };
+  }, [store, user]);
 
   return {
     addBook: addBookWithPersist,
