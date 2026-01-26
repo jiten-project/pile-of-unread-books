@@ -43,9 +43,11 @@ export function usePersistBook() {
     let syncStatus: SyncStatus | undefined;
     if (user) {
       // 現在の同期対象数をカウント（synced + pending）
+      // 現在のユーザーの本、または未所有の本のみをカウント
       const books = store.books;
       const currentSyncCount = books.filter(
-        b => b.syncStatus === 'synced' || b.syncStatus === 'pending'
+        b => (b.syncStatus === 'synced' || b.syncStatus === 'pending') &&
+             (!b.ownerUserId || b.ownerUserId === user.id)
       ).length;
 
       // プレミアム判定（TODO: 将来的にはユーザー情報から取得）

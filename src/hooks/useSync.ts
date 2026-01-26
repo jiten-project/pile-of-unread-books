@@ -42,12 +42,14 @@ export function useSync(): UseSyncReturn {
   const isPremium = false;
 
   // クラウド同期制限の計算
+  // 現在のユーザーの本、または未所有の本のみをカウント
   const cloudSyncLimit = isPremium ? Infinity : SUBSCRIPTION.FREE_CLOUD_SYNC_LIMIT;
   const cloudSyncCount = useMemo(() => {
     return books.filter(b =>
-      b.syncStatus === 'synced' || b.syncStatus === 'pending'
+      (b.syncStatus === 'synced' || b.syncStatus === 'pending') &&
+      (!b.ownerUserId || b.ownerUserId === user?.id)
     ).length;
-  }, [books]);
+  }, [books, user?.id]);
   const canSyncMore = cloudSyncCount < cloudSyncLimit;
 
   const [syncState, setSyncState] = useState<SyncState>('idle');
