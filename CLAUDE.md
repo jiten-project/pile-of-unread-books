@@ -72,7 +72,7 @@ SQLite (local) <──> Zustand Store <──> React Components
 
 ### Key Types (`src/types/book.ts`)
 - `Book`: Complete book data including metadata and user data
-- `BookStatus`: 'unread' | 'reading' | 'paused' | 'completed'
+- `BookStatus`: 'unread' | 'reading' | 'paused' | 'completed' | 'released'
 - `Priority`: 'high' | 'medium' | 'low'
 - `SyncStatus`: 'synced' | 'pending' | 'error'
 

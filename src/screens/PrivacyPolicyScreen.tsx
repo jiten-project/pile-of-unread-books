@@ -13,7 +13,7 @@ export default function PrivacyPolicyScreen() {
         プライバシーポリシー
       </Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2026年1月26日
+        最終更新日: 2026年1月27日
       </Text>
 
       <View style={styles.section}>
@@ -49,7 +49,7 @@ export default function PrivacyPolicyScreen() {
           • 書籍データは暗号化された通信（HTTPS）でクラウドサーバーに送信されます{'\n'}
           • データはSupabase（クラウドデータベースサービス）に保存されます{'\n'}
           • データはユーザーのApple IDに紐づけられ、本人のみがアクセスできます{'\n'}
-          • クラウドに同期できる書籍は現在100冊までです。100冊を超える分はデバイス内にのみ保存されます{'\n\n'}
+          • クラウドに同期できる書籍は現在50冊までです。50冊を超える分はデバイス内にのみ保存されます{'\n\n'}
           メールアドレスについて：Apple IDの「メールを非公開」機能を使用した場合、実際のメールアドレスは本アプリに共有されません。
         </Text>
       </View>

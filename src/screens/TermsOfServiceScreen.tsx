@@ -11,7 +11,7 @@ export default function TermsOfServiceScreen() {
     >
       <Text style={[styles.title, { color: colors.textPrimary }]}>利用規約</Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2026年1月26日
+        最終更新日: 2026年1月27日
       </Text>
 
       <View style={styles.section}>
@@ -54,7 +54,7 @@ export default function TermsOfServiceScreen() {
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
           1. クラウド同期機能は任意のオプション機能です。利用にはApple IDでのサインインが必要です。{'\n'}
-          2. クラウドに同期できる書籍は現在100冊までです。100冊を超える書籍はローカル（デバイス内）にのみ保存されます。{'\n'}
+          2. クラウドに同期できる書籍は現在50冊までです。50冊を超える書籍はローカル（デバイス内）にのみ保存されます。{'\n'}
           3. 同期対象は登録日が古い順に選定されます。{'\n'}
           4. 同期上限は、今後のデータ増加状況等を踏まえて緩和を検討する場合があります。{'\n'}
           5. クラウドサービスの障害やメンテナンスにより、一時的に同期機能が利用できない場合があります。{'\n'}

@@ -69,6 +69,7 @@ export default function HomeScreen() {
     const reading = books.filter(b => b.status === 'reading').length;
     const completed = books.filter(b => b.status === 'completed').length;
     const paused = books.filter(b => b.status === 'paused').length;
+    const released = books.filter(b => b.status === 'released').length;
 
     // ユーザー定義に基づく積読数
     const tsundokuCount = books.filter(b => isTsundoku(b.status)).length;
@@ -99,6 +100,7 @@ export default function HomeScreen() {
       reading,
       completed,
       paused,
+      released,
       tsundokuCount,
       total: books.length,
       completedThisMonth,
@@ -202,6 +204,15 @@ export default function HomeScreen() {
           value={stats.completed}
           color={STATUS_COLORS.completed}
           icon="✅"
+          cardBgColor={colors.surface}
+          textColor={colors.textPrimary}
+          labelColor={colors.textSecondary}
+        />
+        <StatCard
+          label={STATUS_LABELS.released}
+          value={stats.released}
+          color={STATUS_COLORS.released}
+          icon="🕊️"
           cardBgColor={colors.surface}
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}

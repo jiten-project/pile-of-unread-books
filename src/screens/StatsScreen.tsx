@@ -33,6 +33,7 @@ export default function StatsScreen() {
       reading: 0,
       paused: 0,
       completed: 0,
+      released: 0,
     };
     books.forEach(book => {
       statusCounts[book.status]++;

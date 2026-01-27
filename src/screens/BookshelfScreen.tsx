@@ -12,7 +12,7 @@ import { BookCard, BookGridItem, EmptyState, FilterModal, FilterOptions } from '
 import { useBookStore } from '../store';
 import { BookStatus, Book, AppNavigationProp } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, COLORS } from '../constants';
-import { useTheme } from '../contexts';
+import { useTheme, useSettings } from '../contexts';
 
 type FilterStatus = BookStatus | 'all';
 type ViewMode = 'list' | 'grid';
@@ -23,6 +23,7 @@ const filterOptions: { value: FilterStatus; label: string }[] = [
   { value: 'reading', label: STATUS_LABELS.reading },
   { value: 'paused', label: STATUS_LABELS.paused },
   { value: 'completed', label: STATUS_LABELS.completed },
+  { value: 'released', label: STATUS_LABELS.released },
 ];
 
 const defaultFilters: FilterOptions = {
@@ -42,6 +43,7 @@ export default function BookshelfScreen() {
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
+  const { showReleasedInBookshelf } = useSettings();
 
   // 利用可能なタグを抽出
   const availableTags = useMemo(() => {
@@ -66,6 +68,9 @@ export default function BookshelfScreen() {
     // クイックステータスフィルター
     if (selectedFilter !== 'all') {
       result = result.filter(book => book.status === selectedFilter);
+    } else if (!showReleasedInBookshelf) {
+      // 「すべて」選択時に解放した本を除外（設定がOFFの場合）
+      result = result.filter(book => book.status !== 'released');
     }
 
     // 詳細フィルター - ステータス
@@ -118,7 +123,7 @@ export default function BookshelfScreen() {
     });
 
     return result;
-  }, [books, selectedFilter, searchQuery, advancedFilters]);
+  }, [books, selectedFilter, searchQuery, advancedFilters, showReleasedInBookshelf]);
 
   const handleBookPress = useCallback(
     (bookId: string) => {

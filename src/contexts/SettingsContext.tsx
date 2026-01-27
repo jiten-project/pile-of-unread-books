@@ -44,11 +44,14 @@ interface SettingsContextType {
   isTsundoku: (status: BookStatus) => boolean;
   getTsundokuStatuses: () => BookStatus[];
   currentPreset: TsundokuPresetKey | 'custom';
+  showReleasedInBookshelf: boolean;
+  setShowReleasedInBookshelf: (show: boolean) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 const TSUNDOKU_DEFINITION_KEY = '@tsundoku_definition';
+const SHOW_RELEASED_KEY = '@show_released_in_bookshelf';
 
 interface SettingsProviderProps {
   children: ReactNode;
@@ -58,6 +61,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const [tsundokuDefinition, setTsundokuDefinitionState] = useState<TsundokuDefinition>(
     DEFAULT_TSUNDOKU_DEFINITION
   );
+  const [showReleasedInBookshelf, setShowReleasedState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -66,13 +70,19 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
   const loadSettings = async () => {
     try {
-      const saved = await AsyncStorage.getItem(TSUNDOKU_DEFINITION_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const [savedTsundoku, savedShowReleased] = await Promise.all([
+        AsyncStorage.getItem(TSUNDOKU_DEFINITION_KEY),
+        AsyncStorage.getItem(SHOW_RELEASED_KEY),
+      ]);
+      if (savedTsundoku) {
+        const parsed = JSON.parse(savedTsundoku);
         setTsundokuDefinitionState(parsed);
       }
+      if (savedShowReleased !== null) {
+        setShowReleasedState(JSON.parse(savedShowReleased));
+      }
     } catch (error) {
-      console.error('Failed to load tsundoku definition:', error);
+      console.error('Failed to load settings:', error);
     } finally {
       setIsLoading(false);
     }
@@ -84,6 +94,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       setTsundokuDefinitionState(definition);
     } catch (error) {
       console.error('Failed to save tsundoku definition:', error);
+    }
+  };
+
+  const setShowReleasedInBookshelf = async (show: boolean) => {
+    try {
+      await AsyncStorage.setItem(SHOW_RELEASED_KEY, JSON.stringify(show));
+      setShowReleasedState(show);
+    } catch (error) {
+      console.error('Failed to save show released setting:', error);
     }
   };
 
@@ -134,8 +153,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       isTsundoku,
       getTsundokuStatuses,
       currentPreset,
+      showReleasedInBookshelf,
+      setShowReleasedInBookshelf,
     }),
-    [tsundokuDefinition, currentPreset]
+    [tsundokuDefinition, currentPreset, showReleasedInBookshelf]
   );
 
   if (isLoading) {

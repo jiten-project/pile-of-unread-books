@@ -5,6 +5,7 @@ export const STATUS_LABELS: Record<BookStatus, string> = {
   reading: '読書中',
   paused: '中断',
   completed: '読了',
+  released: '解放',
 };
 
 export const STATUS_ICONS: Record<BookStatus, string> = {
@@ -12,6 +13,7 @@ export const STATUS_ICONS: Record<BookStatus, string> = {
   reading: 'book-open-page-variant',
   paused: 'pause-circle',
   completed: 'check-circle',
+  released: 'book-arrow-right',
 };
 
 export const STATUS_COLORS: Record<BookStatus, string> = {
@@ -19,6 +21,7 @@ export const STATUS_COLORS: Record<BookStatus, string> = {
   reading: '#2196F3',
   paused: '#9E9E9E',
   completed: '#4CAF50',
+  released: '#9C27B0',
 };
 
 export const PRIORITY_LABELS: Record<Priority, string> = {
