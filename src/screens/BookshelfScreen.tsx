@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -17,13 +17,15 @@ import { useTheme, useSettings } from '../contexts';
 type FilterStatus = BookStatus | 'all';
 type ViewMode = 'list' | 'grid';
 
-const filterOptions: { value: FilterStatus; label: string }[] = [
+// フィルターオプションの基本リスト（設定に応じて動的にフィルタリング）
+const baseFilterOptions: { value: FilterStatus; label: string; optional?: 'wishlist' | 'released' }[] = [
   { value: 'all', label: 'すべて' },
+  { value: 'wishlist', label: STATUS_LABELS.wishlist, optional: 'wishlist' },
   { value: 'unread', label: STATUS_LABELS.unread },
   { value: 'reading', label: STATUS_LABELS.reading },
   { value: 'paused', label: STATUS_LABELS.paused },
   { value: 'completed', label: STATUS_LABELS.completed },
-  { value: 'released', label: STATUS_LABELS.released },
+  { value: 'released', label: STATUS_LABELS.released, optional: 'released' },
 ];
 
 const defaultFilters: FilterOptions = {
@@ -43,7 +45,17 @@ export default function BookshelfScreen() {
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
-  const { showReleasedInBookshelf } = useSettings();
+  const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
+
+  // 設定がOFFになった場合、対応するフィルターをリセット
+  useEffect(() => {
+    if (!showWishlistInBookshelf && selectedFilter === 'wishlist') {
+      setSelectedFilter('all');
+    }
+    if (!showReleasedInBookshelf && selectedFilter === 'released') {
+      setSelectedFilter('all');
+    }
+  }, [showWishlistInBookshelf, showReleasedInBookshelf, selectedFilter]);
 
   // 利用可能なタグを抽出
   const availableTags = useMemo(() => {
@@ -51,6 +63,15 @@ export default function BookshelfScreen() {
     books.forEach(book => book.tags.forEach(tag => tagSet.add(tag)));
     return Array.from(tagSet).sort();
   }, [books]);
+
+  // 設定に応じてフィルターオプションを生成
+  const filterOptions = useMemo(() => {
+    return baseFilterOptions.filter(option => {
+      if (option.optional === 'wishlist') return showWishlistInBookshelf;
+      if (option.optional === 'released') return showReleasedInBookshelf;
+      return true;
+    });
+  }, [showWishlistInBookshelf, showReleasedInBookshelf]);
 
   // アクティブなフィルター数を計算
   const activeFilterCount = useMemo(() => {
@@ -68,9 +89,14 @@ export default function BookshelfScreen() {
     // クイックステータスフィルター
     if (selectedFilter !== 'all') {
       result = result.filter(book => book.status === selectedFilter);
-    } else if (!showReleasedInBookshelf) {
-      // 「すべて」選択時に解放した本を除外（設定がOFFの場合）
-      result = result.filter(book => book.status !== 'released');
+    } else {
+      // 「すべて」選択時に設定に応じて除外
+      if (!showWishlistInBookshelf) {
+        result = result.filter(book => book.status !== 'wishlist');
+      }
+      if (!showReleasedInBookshelf) {
+        result = result.filter(book => book.status !== 'released');
+      }
     }
 
     // 詳細フィルター - ステータス
@@ -114,6 +140,13 @@ export default function BookshelfScreen() {
         case 'purchaseDate':
           comparison = (a.purchaseDate || '').localeCompare(b.purchaseDate || '');
           break;
+        case 'tsundokuDays': {
+          // 購入日（なければ登録日）からの経過日数でソート
+          const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
+          const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
+          comparison = dateA - dateB;
+          break;
+        }
         case 'createdAt':
         default:
           comparison = a.createdAt.localeCompare(b.createdAt);
@@ -123,7 +156,7 @@ export default function BookshelfScreen() {
     });
 
     return result;
-  }, [books, selectedFilter, searchQuery, advancedFilters, showReleasedInBookshelf]);
+  }, [books, selectedFilter, searchQuery, advancedFilters, showWishlistInBookshelf, showReleasedInBookshelf]);
 
   const handleBookPress = useCallback(
     (bookId: string) => {

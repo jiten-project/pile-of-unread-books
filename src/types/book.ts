@@ -1,5 +1,5 @@
 // 書籍のステータス
-export type BookStatus = 'unread' | 'reading' | 'paused' | 'completed' | 'released';
+export type BookStatus = 'wishlist' | 'unread' | 'reading' | 'paused' | 'completed' | 'released';
 
 // 優先度
 export type Priority = 'high' | 'medium' | 'low';

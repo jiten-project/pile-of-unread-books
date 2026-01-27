@@ -3,11 +3,14 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { RootNavigator } from './src/navigation';
 import { useDatabase } from './src/hooks';
+import { useWhatsNew } from './src/hooks/useWhatsNew';
 import { ThemeProvider, SettingsProvider, AuthProvider, SyncProvider, useTheme } from './src/contexts';
+import { WhatsNewModal } from './src/components/WhatsNewModal';
 
 function AppContent() {
   const { isReady } = useDatabase();
   const { colors, isDark } = useTheme();
+  const { shouldShowModal, changelog, markAsShown } = useWhatsNew();
 
   if (!isReady) {
     return (
@@ -17,7 +20,18 @@ function AppContent() {
     );
   }
 
-  return <RootNavigator />;
+  return (
+    <>
+      <RootNavigator />
+      {changelog && (
+        <WhatsNewModal
+          visible={shouldShowModal}
+          changelog={changelog}
+          onClose={markAsShown}
+        />
+      )}
+    </>
+  );
 }
 
 function ThemedApp() {

@@ -2,7 +2,8 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Book } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../constants';
 import { DEVICE } from '../constants/theme';
-import { useTheme } from '../contexts';
+import { useTheme, useSettings } from '../contexts';
+import { getDaysSince } from '../utils';
 
 // iPad用スケールファクター
 const SCALE = DEVICE.isTablet ? 1.5 : 1.0;
@@ -14,6 +15,11 @@ interface BookCardProps {
 
 export default function BookCard({ book, onPress }: BookCardProps) {
   const { colors } = useTheme();
+  const { isTsundoku } = useSettings();
+
+  // 積読日数を計算（購入日があれば購入日から、なければ登録日から）
+  const tsundokuDays = getDaysSince(book.purchaseDate || book.createdAt);
+  const showTsundokuDays = isTsundoku(book.status);
 
   const themedStyles = {
     container: { backgroundColor: colors.surface },
@@ -59,6 +65,11 @@ export default function BookCard({ book, onPress }: BookCardProps) {
           <View style={[styles.badge, { backgroundColor: PRIORITY_COLORS[book.priority] }]}>
             <Text style={styles.badgeText}>{PRIORITY_LABELS[book.priority]}</Text>
           </View>
+          {showTsundokuDays && (
+            <View style={[styles.badge, styles.daysBadge]}>
+              <Text style={styles.badgeText}>{tsundokuDays}日</Text>
+            </View>
+          )}
         </View>
 
         {book.tags.length > 0 && (
@@ -139,6 +150,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Math.round(8 * SCALE),
     paddingVertical: Math.round(2 * SCALE),
     borderRadius: Math.round(10 * SCALE),
+  },
+  daysBadge: {
+    backgroundColor: '#E91E63',
   },
   badgeText: {
     fontSize: Math.round(11 * SCALE),

@@ -6,6 +6,29 @@ const DB_NAME = 'tsundoku.db';
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
+ * マイグレーション定義
+ * version: 適用順序（1から連番）
+ * sql: 実行するSQL（複数文は ; で区切る）
+ */
+const MIGRATIONS = [
+  {
+    version: 1,
+    description: 'Add condition column',
+    sql: "ALTER TABLE books ADD COLUMN condition TEXT NOT NULL DEFAULT 'new';",
+  },
+  {
+    version: 2,
+    description: 'Add sync_status column',
+    sql: "ALTER TABLE books ADD COLUMN sync_status TEXT DEFAULT 'pending';",
+  },
+  {
+    version: 3,
+    description: 'Add owner_user_id column',
+    sql: 'ALTER TABLE books ADD COLUMN owner_user_id TEXT;',
+  },
+];
+
+/**
  * 安全なJSONパース（失敗時はデフォルト値を返す）
  */
 function safeJsonParse<T>(value: unknown, defaultValue: T): T {
@@ -23,6 +46,14 @@ function safeJsonParse<T>(value: unknown, defaultValue: T): T {
 export async function initDatabase(): Promise<void> {
   db = await SQLite.openDatabaseAsync(DB_NAME);
 
+  // マイグレーションバージョン管理テーブルを作成
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS schema_version (
+      version INTEGER PRIMARY KEY
+    );
+  `);
+
+  // メインテーブルを作成
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS books (
       id TEXT PRIMARY KEY NOT NULL,
@@ -48,7 +79,9 @@ export async function initDatabase(): Promise<void> {
       completed_date TEXT,
       current_page INTEGER,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      sync_status TEXT DEFAULT 'pending',
+      owner_user_id TEXT
     );
   `);
 
@@ -59,24 +92,47 @@ export async function initDatabase(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_books_priority ON books(priority);
   `);
 
-  // 既存テーブルにconditionカラムがない場合は追加
-  try {
-    await db.execAsync(`ALTER TABLE books ADD COLUMN condition TEXT NOT NULL DEFAULT 'new';`);
-  } catch {
-    // カラムが既に存在する場合は無視
-  }
+  // マイグレーションを実行
+  await runMigrations();
+}
 
-  // クラウド同期用カラムを追加
-  try {
-    await db.execAsync(`ALTER TABLE books ADD COLUMN sync_status TEXT DEFAULT 'pending';`);
-  } catch {
-    // カラムが既に存在する場合は無視
-  }
+/**
+ * マイグレーションを実行
+ * 適用済みバージョンより新しいマイグレーションのみ実行
+ */
+async function runMigrations(): Promise<void> {
+  if (!db) return;
 
-  try {
-    await db.execAsync(`ALTER TABLE books ADD COLUMN owner_user_id TEXT;`);
-  } catch {
-    // カラムが既に存在する場合は無視
+  // 現在のバージョンを取得
+  const result = await db.getFirstAsync<{ version: number }>(
+    'SELECT MAX(version) as version FROM schema_version'
+  );
+  const currentVersion = result?.version ?? 0;
+
+  // 未適用のマイグレーションを実行
+  for (const migration of MIGRATIONS) {
+    if (migration.version > currentVersion) {
+      try {
+        await db.execAsync(migration.sql);
+        await db.runAsync(
+          'INSERT INTO schema_version (version) VALUES (?)',
+          [migration.version]
+        );
+        console.log(`Migration ${migration.version} applied: ${migration.description}`);
+      } catch (error) {
+        // カラムが既に存在する場合などは無視（ALTER TABLE対策）
+        console.log(`Migration ${migration.version} skipped (already applied): ${migration.description}`);
+        // バージョンは記録しておく
+        try {
+          await db.runAsync(
+            'INSERT OR IGNORE INTO schema_version (version) VALUES (?)',
+            [migration.version]
+          );
+        } catch {
+          // 無視
+        }
+      }
+    }
   }
 }
 
@@ -450,4 +506,37 @@ export async function resetAllSyncStatus(): Promise<void> {
   }
 
   await db.runAsync("UPDATE books SET sync_status = 'pending'");
+}
+
+/**
+ * 複数の本の同期ステータスを一括更新（バッチ処理）
+ * パフォーマンス向上のため、1件ずつ更新する代わりにこの関数を使用
+ */
+export async function updateSyncStatusBatch(
+  ids: string[],
+  syncStatus: Book['syncStatus'],
+  ownerUserId?: string
+): Promise<void> {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  // プレースホルダーを生成
+  const placeholders = ids.map(() => '?').join(',');
+
+  if (ownerUserId) {
+    await db.runAsync(
+      `UPDATE books SET sync_status = ?, owner_user_id = ? WHERE id IN (${placeholders})`,
+      [syncStatus ?? 'pending', ownerUserId, ...ids]
+    );
+  } else {
+    await db.runAsync(
+      `UPDATE books SET sync_status = ? WHERE id IN (${placeholders})`,
+      [syncStatus ?? 'pending', ...ids]
+    );
+  }
 }

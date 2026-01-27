@@ -35,8 +35,6 @@ const TSUNDOKU_MESSAGES = [
   '読まなくても、そこにある安心感',
   '積読は静かな決意表明',
   '愛読書は「カラマーゾフの兄弟」ですって、言いたい',
-  'あ、それ原書で読んだって言いたくて買ってみた',
-  'PTAのこの映画の原作、ピンチョンなんだって、本棚にあったな',
   '「純粋理性批判」、学生の頃に挑戦したなあ',
 ];
 
@@ -44,7 +42,7 @@ export default function HomeScreen() {
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
-  const { isTsundoku } = useSettings();
+  const { isTsundoku, showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
 
   // ランダムメッセージ（1分ごとに更新）
   const [randomMessage, setRandomMessage] = useState('');
@@ -65,6 +63,7 @@ export default function HomeScreen() {
   }, []);
 
   const stats = useMemo(() => {
+    const wishlist = books.filter(b => b.status === 'wishlist').length;
     const unread = books.filter(b => b.status === 'unread').length;
     const reading = books.filter(b => b.status === 'reading').length;
     const completed = books.filter(b => b.status === 'completed').length;
@@ -96,6 +95,7 @@ export default function HomeScreen() {
       })[0];
 
     return {
+      wishlist,
       unread,
       reading,
       completed,
@@ -149,7 +149,7 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
     >
       <View style={styles.header}>
-        <Text style={[styles.greeting, themedStyles.greeting]}>積読本管理</Text>
+        <Text style={[styles.greeting, themedStyles.greeting]}>積読生活</Text>
         {randomMessage && (
           <Text style={[styles.quoteText, { color: colors.textTertiary }]}>
             「{randomMessage}」
@@ -176,7 +176,7 @@ export default function HomeScreen() {
           label={STATUS_LABELS.unread}
           value={stats.unread}
           color={STATUS_COLORS.unread}
-          icon="📕"
+          icon="📚"
           cardBgColor={colors.surface}
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}
@@ -208,15 +208,28 @@ export default function HomeScreen() {
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}
         />
-        <StatCard
-          label={STATUS_LABELS.released}
-          value={stats.released}
-          color={STATUS_COLORS.released}
-          icon="🕊️"
-          cardBgColor={colors.surface}
-          textColor={colors.textPrimary}
-          labelColor={colors.textSecondary}
-        />
+        {showReleasedInBookshelf && (
+          <StatCard
+            label={STATUS_LABELS.released}
+            value={stats.released}
+            color={STATUS_COLORS.released}
+            icon="🕊️"
+            cardBgColor={colors.surface}
+            textColor={colors.textPrimary}
+            labelColor={colors.textSecondary}
+          />
+        )}
+        {showWishlistInBookshelf && (
+          <StatCard
+            label={STATUS_LABELS.wishlist}
+            value={stats.wishlist}
+            color={STATUS_COLORS.wishlist}
+            icon="💕"
+            cardBgColor={colors.surface}
+            textColor={colors.textPrimary}
+            labelColor={colors.textSecondary}
+          />
+        )}
       </View>
 
       {stats.totalTsundokuPrice > 0 && (

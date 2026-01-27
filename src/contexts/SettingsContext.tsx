@@ -44,6 +44,8 @@ interface SettingsContextType {
   isTsundoku: (status: BookStatus) => boolean;
   getTsundokuStatuses: () => BookStatus[];
   currentPreset: TsundokuPresetKey | 'custom';
+  showWishlistInBookshelf: boolean;
+  setShowWishlistInBookshelf: (show: boolean) => Promise<void>;
   showReleasedInBookshelf: boolean;
   setShowReleasedInBookshelf: (show: boolean) => Promise<void>;
 }
@@ -51,6 +53,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 const TSUNDOKU_DEFINITION_KEY = '@tsundoku_definition';
+const SHOW_WISHLIST_KEY = '@show_wishlist_in_bookshelf';
 const SHOW_RELEASED_KEY = '@show_released_in_bookshelf';
 
 interface SettingsProviderProps {
@@ -61,6 +64,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const [tsundokuDefinition, setTsundokuDefinitionState] = useState<TsundokuDefinition>(
     DEFAULT_TSUNDOKU_DEFINITION
   );
+  const [showWishlistInBookshelf, setShowWishlistState] = useState(false);
   const [showReleasedInBookshelf, setShowReleasedState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,13 +74,17 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
   const loadSettings = async () => {
     try {
-      const [savedTsundoku, savedShowReleased] = await Promise.all([
+      const [savedTsundoku, savedShowWishlist, savedShowReleased] = await Promise.all([
         AsyncStorage.getItem(TSUNDOKU_DEFINITION_KEY),
+        AsyncStorage.getItem(SHOW_WISHLIST_KEY),
         AsyncStorage.getItem(SHOW_RELEASED_KEY),
       ]);
       if (savedTsundoku) {
         const parsed = JSON.parse(savedTsundoku);
         setTsundokuDefinitionState(parsed);
+      }
+      if (savedShowWishlist !== null) {
+        setShowWishlistState(JSON.parse(savedShowWishlist));
       }
       if (savedShowReleased !== null) {
         setShowReleasedState(JSON.parse(savedShowReleased));
@@ -97,6 +105,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }
   };
 
+  const setShowWishlistInBookshelf = async (show: boolean) => {
+    try {
+      await AsyncStorage.setItem(SHOW_WISHLIST_KEY, JSON.stringify(show));
+      setShowWishlistState(show);
+    } catch (error) {
+      console.error('Failed to save show wishlist setting:', error);
+    }
+  };
+
   const setShowReleasedInBookshelf = async (show: boolean) => {
     try {
       await AsyncStorage.setItem(SHOW_RELEASED_KEY, JSON.stringify(show));
@@ -109,6 +126,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   // 指定したステータスが積読かどうかを判定
   const isTsundoku = (status: BookStatus): boolean => {
     switch (status) {
+      case 'wishlist':
+        return false; // ほしい本は積読ではない
       case 'unread':
         return tsundokuDefinition.includeUnread;
       case 'reading':
@@ -117,6 +136,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         return tsundokuDefinition.includePaused;
       case 'completed':
         return false; // 読了は常に積読ではない
+      case 'released':
+        return false; // 解放した本は積読ではない
       default:
         return false;
     }
@@ -153,10 +174,12 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       isTsundoku,
       getTsundokuStatuses,
       currentPreset,
+      showWishlistInBookshelf,
+      setShowWishlistInBookshelf,
       showReleasedInBookshelf,
       setShowReleasedInBookshelf,
     }),
-    [tsundokuDefinition, currentPreset, showReleasedInBookshelf]
+    [tsundokuDefinition, currentPreset, showWishlistInBookshelf, showReleasedInBookshelf]
   );
 
   if (isLoading) {

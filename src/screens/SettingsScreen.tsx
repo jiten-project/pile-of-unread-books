@@ -29,7 +29,7 @@ export default function SettingsScreen() {
   const { books, setBooks } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors, themeMode, setThemeMode } = useTheme();
-  const { tsundokuDefinition, setTsundokuDefinition, currentPreset, showReleasedInBookshelf, setShowReleasedInBookshelf } = useSettings();
+  const { tsundokuDefinition, setTsundokuDefinition, currentPreset, showWishlistInBookshelf, setShowWishlistInBookshelf, showReleasedInBookshelf, setShowReleasedInBookshelf } = useSettings();
   const { user, isLoading: isAuthLoading, isAppleAuthAvailable, signInWithApple, signOut } = useAuth();
   const { syncState, lastSyncTime, triggerFullSync, cloudSyncCount, cloudSyncLimit, isPremium } = useSyncContext();
   const [isExporting, setIsExporting] = useState(false);
@@ -583,10 +583,26 @@ export default function SettingsScreen() {
         <View style={[styles.switchRow, { borderBottomColor: colors.border }]}>
           <View style={styles.switchLabelContainer}>
             <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
+              ほしい本を表示
+            </Text>
+            <Text style={[styles.switchDescription, { color: colors.textTertiary }]}>
+              「ほしい」ステータスの本を本棚に表示
+            </Text>
+          </View>
+          <Switch
+            value={showWishlistInBookshelf}
+            onValueChange={setShowWishlistInBookshelf}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={showWishlistInBookshelf ? '#fff' : '#f4f3f4'}
+          />
+        </View>
+        <View style={[styles.switchRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
               解放した本を表示
             </Text>
             <Text style={[styles.switchDescription, { color: colors.textTertiary }]}>
-              「すべて」表示時に解放した本も含める
+              「解放」ステータスの本を本棚に表示
             </Text>
           </View>
           <Switch

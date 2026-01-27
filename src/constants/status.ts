@@ -1,7 +1,8 @@
 import { BookStatus, Priority, BookCondition } from '../types';
 
 export const STATUS_LABELS: Record<BookStatus, string> = {
-  unread: '積読',
+  wishlist: 'ほしい',
+  unread: '未読',
   reading: '読書中',
   paused: '中断',
   completed: '読了',
@@ -9,6 +10,7 @@ export const STATUS_LABELS: Record<BookStatus, string> = {
 };
 
 export const STATUS_ICONS: Record<BookStatus, string> = {
+  wishlist: 'heart-outline',
   unread: 'book-multiple',
   reading: 'book-open-page-variant',
   paused: 'pause-circle',
@@ -17,6 +19,7 @@ export const STATUS_ICONS: Record<BookStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<BookStatus, string> = {
+  wishlist: '#F06292',
   unread: '#FF9800',
   reading: '#2196F3',
   paused: '#9E9E9E',
