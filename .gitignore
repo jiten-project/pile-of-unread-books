@@ -70,6 +70,10 @@ credentials.json
 credentials/
 eas-credentials/
 
+# EAS build artifacts
+*.tar.gz
+eas-build-*/
+
 # API keys and secrets
 **/secrets/
 **/private_keys/
@@ -158,6 +162,9 @@ jest-results/
 
 # Serena (MCP tool cache)
 .serena/
+
+# Claude Code
+.claude/
 
 # Fastlane
 fastlane/report.xml

@@ -4,6 +4,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -28,7 +29,7 @@ export default function SettingsScreen() {
   const { books, setBooks } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors, themeMode, setThemeMode } = useTheme();
-  const { tsundokuDefinition, setTsundokuDefinition, currentPreset } = useSettings();
+  const { tsundokuDefinition, setTsundokuDefinition, currentPreset, showWishlistInBookshelf, setShowWishlistInBookshelf, showReleasedInBookshelf, setShowReleasedInBookshelf } = useSettings();
   const { user, isLoading: isAuthLoading, isAppleAuthAvailable, signInWithApple, signOut } = useAuth();
   const { syncState, lastSyncTime, triggerFullSync, cloudSyncCount, cloudSyncLimit, isPremium } = useSyncContext();
   const [isExporting, setIsExporting] = useState(false);
@@ -578,6 +579,42 @@ export default function SettingsScreen() {
       </View>
 
       <View style={[styles.section, themedStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>本棚の表示</Text>
+        <View style={[styles.switchRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
+              ほしい本を表示
+            </Text>
+            <Text style={[styles.switchDescription, { color: colors.textTertiary }]}>
+              「ほしい」ステータスの本を本棚に表示
+            </Text>
+          </View>
+          <Switch
+            value={showWishlistInBookshelf}
+            onValueChange={setShowWishlistInBookshelf}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={showWishlistInBookshelf ? '#fff' : '#f4f3f4'}
+          />
+        </View>
+        <View style={[styles.switchRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
+              解放した本を表示
+            </Text>
+            <Text style={[styles.switchDescription, { color: colors.textTertiary }]}>
+              「解放」ステータスの本を本棚に表示
+            </Text>
+          </View>
+          <Switch
+            value={showReleasedInBookshelf}
+            onValueChange={setShowReleasedInBookshelf}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={showReleasedInBookshelf ? '#fff' : '#f4f3f4'}
+          />
+        </View>
+      </View>
+
+      <View style={[styles.section, themedStyles.section]}>
         <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>通知</Text>
 
         <TouchableOpacity
@@ -851,6 +888,26 @@ const styles = StyleSheet.create({
   },
   statusExcluded: {
     fontSize: 13,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  switchLabelContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  switchDescription: {
+    fontSize: 12,
+    marginTop: 2,
   },
   menuItem: {
     flexDirection: 'row',

@@ -29,10 +29,12 @@ export default function StatsScreen() {
   const stats = useMemo(() => {
     // ステータス別集計
     const statusCounts: Record<BookStatus, number> = {
+      wishlist: 0,
       unread: 0,
       reading: 0,
       paused: 0,
       completed: 0,
+      released: 0,
     };
     books.forEach(book => {
       statusCounts[book.status]++;
