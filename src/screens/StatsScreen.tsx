@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { PieChart, BarChart } from 'react-native-chart-kit';
+import { PieChart } from 'react-native-chart-kit';
 import { useBookStore } from '../store';
-import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../constants';
-import { BookStatus, Priority } from '../types';
+import { STATUS_LABELS, STATUS_COLORS } from '../constants';
+import { BookStatus } from '../types';
 import { EmptyState } from '../components';
+import { useTsundokuStats } from '../hooks';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -26,45 +27,22 @@ const chartConfig = {
 export default function StatsScreen() {
   const { books } = useBookStore();
 
+  // 積読統計（カスタムフックで一元管理）
+  const { tsundokuSpent, avgTsundokuDays } = useTsundokuStats();
+
   const stats = useMemo(() => {
     // ステータス別集計
     const statusCounts: Record<BookStatus, number> = {
+      wishlist: 0,
       unread: 0,
       reading: 0,
       paused: 0,
       completed: 0,
+      released: 0,
     };
     books.forEach(book => {
       statusCounts[book.status]++;
     });
-
-    // 優先度別集計
-    const priorityCounts: Record<Priority, number> = {
-      high: 0,
-      medium: 0,
-      low: 0,
-    };
-    books.forEach(book => {
-      priorityCounts[book.priority]++;
-    });
-
-    // 月別読了数（過去6ヶ月）
-    const monthlyCompleted: { month: string; count: number }[] = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      // 月末日の23:59:59.999に設定して、その日の読了も含める
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
-      const count = books.filter(book => {
-        if (!book.completedDate) return false;
-        const completed = new Date(book.completedDate);
-        return completed >= monthStart && completed <= monthEnd;
-      }).length;
-      monthlyCompleted.push({
-        month: `${monthStart.getMonth() + 1}月`,
-        count,
-      });
-    }
 
     // タグ別集計（上位5件）
     const tagCounts: Record<string, number> = {};
@@ -77,34 +55,14 @@ export default function StatsScreen() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
-    // 購入金額集計
+    // 総購入金額
     const totalSpent = books.reduce((sum, book) => sum + (book.purchasePrice || 0), 0);
-    const unreadSpent = books
-      .filter(b => b.status === 'unread')
-      .reduce((sum, book) => sum + (book.purchasePrice || 0), 0);
-
-    // 平均積読期間
-    const unreadBooks = books.filter(b => b.status === 'unread');
-    let avgUnreadDays = 0;
-    if (unreadBooks.length > 0) {
-      const totalDays = unreadBooks.reduce((sum, book) => {
-        const days = Math.floor(
-          (now.getTime() - new Date(book.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        return sum + days;
-      }, 0);
-      avgUnreadDays = Math.round(totalDays / unreadBooks.length);
-    }
 
     return {
       total: books.length,
       statusCounts,
-      priorityCounts,
-      monthlyCompleted,
       topTags,
       totalSpent,
-      unreadSpent,
-      avgUnreadDays,
     };
   }, [books]);
 
@@ -117,15 +75,6 @@ export default function StatsScreen() {
       legendFontColor: '#333',
       legendFontSize: 12,
     }));
-
-  const barData = {
-    labels: stats.monthlyCompleted.map(m => m.month),
-    datasets: [
-      {
-        data: stats.monthlyCompleted.map(m => m.count),
-      },
-    ],
-  };
 
   if (books.length === 0) {
     return (
@@ -149,10 +98,10 @@ export default function StatsScreen() {
       </View>
 
       <View style={styles.summaryRow}>
-        <SummaryCard label="平均積読期間" value={`${stats.avgUnreadDays}日`} color="#FF9800" />
+        <SummaryCard label="平均積読期間" value={`${avgTsundokuDays}日`} color="#FF9800" />
         <SummaryCard
           label="積読金額"
-          value={`¥${stats.unreadSpent.toLocaleString()}`}
+          value={`¥${tsundokuSpent.toLocaleString()}`}
           color="#F44336"
         />
       </View>
@@ -171,37 +120,6 @@ export default function StatsScreen() {
             absolute
           />
         )}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>月別読了数（過去6ヶ月）</Text>
-        <BarChart
-          data={barData}
-          width={screenWidth - 32}
-          height={220}
-          yAxisLabel=""
-          yAxisSuffix="冊"
-          chartConfig={{
-            ...chartConfig,
-            barPercentage: 0.6,
-          }}
-          style={styles.chart}
-          showValuesOnTopOfBars
-          fromZero
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>優先度別</Text>
-        <View style={styles.priorityGrid}>
-          {(Object.keys(PRIORITY_LABELS) as Priority[]).map(priority => (
-            <View key={priority} style={styles.priorityItem}>
-              <View style={[styles.priorityDot, { backgroundColor: PRIORITY_COLORS[priority] }]} />
-              <Text style={styles.priorityLabel}>{PRIORITY_LABELS[priority]}</Text>
-              <Text style={styles.priorityCount}>{stats.priorityCounts[priority]}冊</Text>
-            </View>
-          ))}
-        </View>
       </View>
 
       {stats.topTags.length > 0 && (
@@ -224,9 +142,9 @@ export default function StatsScreen() {
           <Text style={styles.spendingValue}>¥{stats.totalSpent.toLocaleString()}</Text>
         </View>
         <View style={styles.spendingRow}>
-          <Text style={styles.spendingLabel}>未読本の金額</Text>
+          <Text style={styles.spendingLabel}>積読本の金額</Text>
           <Text style={[styles.spendingValue, { color: '#F44336' }]}>
-            ¥{stats.unreadSpent.toLocaleString()}
+            ¥{tsundokuSpent.toLocaleString()}
           </Text>
         </View>
       </View>
@@ -302,32 +220,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-  },
-  priorityGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  priorityItem: {
-    alignItems: 'center',
-  },
-  priorityDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  priorityLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  priorityCount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
   },
   tagRow: {
     flexDirection: 'row',

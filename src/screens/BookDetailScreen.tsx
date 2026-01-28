@@ -14,7 +14,7 @@ import { usePersistBook } from '../hooks';
 import { BookStatus, RootStackNavigationProp, BookDetailRouteProp } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
 import { formatDate, formatPrice, joinWithComma } from '../utils';
-import { useTheme } from '../contexts';
+import { useTheme, useSettings } from '../contexts';
 
 export default function BookDetailScreen() {
   const route = useRoute<BookDetailRouteProp>();
@@ -23,6 +23,7 @@ export default function BookDetailScreen() {
   const { getBookById } = useBookStore();
   const { updateStatus, deleteBook } = usePersistBook();
   const { colors } = useTheme();
+  const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const book = getBookById(bookId);
@@ -121,27 +122,34 @@ export default function BookDetailScreen() {
       <View style={[styles.section, themedStyles.section]}>
         <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>ステータス変更</Text>
         <View style={styles.statusButtons}>
-          {(Object.keys(STATUS_LABELS) as BookStatus[]).map(status => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.statusButton,
-                themedStyles.statusButton,
-                book.status === status && { backgroundColor: STATUS_COLORS[status], borderColor: STATUS_COLORS[status] },
-              ]}
-              onPress={() => handleStatusChange(status)}
-            >
-              <Text
+          {(Object.keys(STATUS_LABELS) as BookStatus[])
+            .filter(status => {
+              // 設定でOFFの場合は非表示
+              if (status === 'wishlist' && !showWishlistInBookshelf) return false;
+              if (status === 'released' && !showReleasedInBookshelf) return false;
+              return true;
+            })
+            .map(status => (
+              <TouchableOpacity
+                key={status}
                 style={[
-                  styles.statusButtonText,
-                  themedStyles.statusButtonText,
-                  book.status === status && styles.statusButtonTextActive,
+                  styles.statusButton,
+                  themedStyles.statusButton,
+                  book.status === status && { backgroundColor: STATUS_COLORS[status], borderColor: STATUS_COLORS[status] },
                 ]}
+                onPress={() => handleStatusChange(status)}
               >
-                {STATUS_LABELS[status]}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.statusButtonText,
+                    themedStyles.statusButtonText,
+                    book.status === status && styles.statusButtonTextActive,
+                  ]}
+                >
+                  {STATUS_LABELS[status]}
+                </Text>
+              </TouchableOpacity>
+            ))}
         </View>
       </View>
 
