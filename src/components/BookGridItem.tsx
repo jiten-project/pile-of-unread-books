@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Book } from '../types';
-import { STATUS_COLORS } from '../constants';
+import { STATUS_COLORS, DEVICE } from '../constants';
 import { useSettings } from '../contexts';
 import { getDaysSince } from '../utils';
 
@@ -43,9 +43,12 @@ export default function BookGridItem({ book, onPress }: BookGridItemProps) {
   );
 }
 
+// iPadでは5列、iPhoneでは3列
+const GRID_ITEM_WIDTH = DEVICE.isTablet ? '18.5%' : '31%';
+
 const styles = StyleSheet.create({
   container: {
-    width: '31%',
+    width: GRID_ITEM_WIDTH,
     marginBottom: 16,
   },
   imageContainer: {

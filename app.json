@@ -18,7 +18,8 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "本のバーコード（ISBN）をスキャンして書籍情報を自動取得するためにカメラを使用します。例：本の裏表紙にあるバーコードを読み取り、タイトルや著者名を自動で入力します。"
+        "NSCameraUsageDescription": "本のバーコード（ISBN）をスキャンして書籍情報を自動取得するためにカメラを使用します。例：本の裏表紙にあるバーコードを読み取り、タイトルや著者名を自動で入力します。",
+        "CFBundleDevelopmentRegion": "ja"
       }
     },
     "android": {

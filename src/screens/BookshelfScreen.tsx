@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { BookCard, BookGridItem, EmptyState, FilterModal, FilterOptions } from '../components';
 import { useBookStore } from '../store';
 import { BookStatus, Book, AppNavigationProp } from '../types';
-import { STATUS_LABELS, STATUS_COLORS, COLORS } from '../constants';
+import { STATUS_LABELS, STATUS_COLORS, COLORS, DEVICE } from '../constants';
 import { useTheme, useSettings } from '../contexts';
 
 type FilterStatus = BookStatus | 'all';
@@ -349,10 +349,10 @@ export default function BookshelfScreen() {
         />
       ) : (
         <FlatList
-          key="grid-view"
+          key={`grid-view-${DEVICE.isTablet ? 5 : 3}`}
           data={filteredBooks}
           keyExtractor={item => item.id}
-          numColumns={3}
+          numColumns={DEVICE.isTablet ? 5 : 3}
           contentContainerStyle={styles.gridContent}
           columnWrapperStyle={styles.gridRow}
           renderItem={renderGridItem}

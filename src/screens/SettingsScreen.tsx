@@ -13,6 +13,7 @@ import {
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
+import { usePersistBook } from '../hooks';
 import { exportBooks, importBooks } from '../services';
 import { insertBooksInTransaction, getAllBooks, deleteAllBooks } from '../services/database';
 import { deleteAllBooksFromCloud } from '../services/cloudDatabase';
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
   const navigation = useNavigation<AppNavigationProp>();
   const { colors, themeMode, setThemeMode } = useTheme();
   const { tsundokuDefinition, setTsundokuDefinition, currentPreset, showWishlistInBookshelf, setShowWishlistInBookshelf, showReleasedInBookshelf, setShowReleasedInBookshelf } = useSettings();
+  const { updateStatus } = usePersistBook();
   const { user, isLoading: isAuthLoading, isAppleAuthAvailable, signInWithApple, signOut } = useAuth();
   const { syncState, lastSyncTime, triggerFullSync, cloudSyncCount, cloudSyncLimit, isPremium } = useSyncContext();
   const [isExporting, setIsExporting] = useState(false);
@@ -104,6 +106,28 @@ export default function SettingsScreen() {
 
   const handlePresetSelect = (presetKey: TsundokuPresetKey) => {
     setTsundokuDefinition(TSUNDOKU_PRESETS[presetKey].definition);
+  };
+
+  const handleWishlistToggle = async (value: boolean) => {
+    if (!value) {
+      // OFFにする場合、wishlistステータスの本を未読に変更
+      const wishlistBooks = books.filter(b => b.status === 'wishlist');
+      for (const book of wishlistBooks) {
+        await updateStatus(book.id, 'unread');
+      }
+    }
+    setShowWishlistInBookshelf(value);
+  };
+
+  const handleReleasedToggle = async (value: boolean) => {
+    if (!value) {
+      // OFFにする場合、releasedステータスの本を未読に変更
+      const releasedBooks = books.filter(b => b.status === 'released');
+      for (const book of releasedBooks) {
+        await updateStatus(book.id, 'unread');
+      }
+    }
+    setShowReleasedInBookshelf(value);
   };
 
   const handleExport = async () => {
@@ -591,7 +615,7 @@ export default function SettingsScreen() {
           </View>
           <Switch
             value={showWishlistInBookshelf}
-            onValueChange={setShowWishlistInBookshelf}
+            onValueChange={handleWishlistToggle}
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={showWishlistInBookshelf ? '#fff' : '#f4f3f4'}
           />
@@ -607,7 +631,7 @@ export default function SettingsScreen() {
           </View>
           <Switch
             value={showReleasedInBookshelf}
-            onValueChange={setShowReleasedInBookshelf}
+            onValueChange={handleReleasedToggle}
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={showReleasedInBookshelf ? '#fff' : '#f4f3f4'}
           />
