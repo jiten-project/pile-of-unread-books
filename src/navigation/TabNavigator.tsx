@@ -64,7 +64,8 @@ function AddButton({ onPress, primaryColor }: AddButtonProps) {
 }
 
 // タブバーのサイズ定数（TabNavigatorより前に定義）
-const TAB_SCALE = DEVICE.isTablet ? 1.5 : 1.0;
+// タブバーは操作性を考慮して、コンテンツより少し大きめにスケール
+const TAB_SCALE = DEVICE.isTablet ? 1.3 : 1.0;
 const TAB_BAR_HEIGHT = Math.round(80 * TAB_SCALE);
 const TAB_BAR_PADDING_BOTTOM = 0;
 const TAB_BAR_PADDING_TOP = Math.round(32 * TAB_SCALE);

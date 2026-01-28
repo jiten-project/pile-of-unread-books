@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FormInput, SelectInput, TagInput } from '../components';
+import { FormInput, SelectInput, TagInput, DateInput } from '../components';
 import { usePersistBook } from '../hooks';
 import { BookStatus, Priority, BookCondition, RootStackNavigationProp } from '../types';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
@@ -25,6 +25,7 @@ interface FormData {
   status: BookStatus;
   priority: Priority;
   condition: BookCondition;
+  purchaseDate: string;
   purchasePlace: string;
   purchasePrice: string;
   purchaseReason: string;
@@ -45,6 +46,7 @@ const initialFormData: FormData = {
   status: 'unread',
   priority: 'medium',
   condition: 'new',
+  purchaseDate: '',
   purchasePlace: '',
   purchasePrice: '',
   purchaseReason: '',
@@ -132,7 +134,9 @@ export default function AddBookScreen() {
         purchasePlace: formData.purchasePlace.trim() || undefined,
         purchasePrice: parsePrice(formData.purchasePrice),
         purchaseReason: formData.purchaseReason.trim() || undefined,
-        purchaseDate: new Date().toISOString(),
+        purchaseDate: formData.purchaseDate
+          ? new Date(formData.purchaseDate + 'T00:00:00').toISOString()
+          : new Date().toISOString(),
         tags: formData.tags,
         notes: formData.notes.trim() || undefined,
       });
@@ -246,6 +250,13 @@ export default function AddBookScreen() {
           options={conditionOptions}
           value={formData.condition}
           onChange={v => updateField('condition', v)}
+        />
+
+        <DateInput
+          label="購入日"
+          value={formData.purchaseDate}
+          onChange={v => updateField('purchaseDate', v)}
+          placeholder="購入日を選択"
         />
 
         <FormInput

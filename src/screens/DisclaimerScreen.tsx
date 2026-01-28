@@ -11,7 +11,7 @@ export default function DisclaimerScreen() {
     >
       <Text style={[styles.title, { color: colors.textPrimary }]}>免責事項</Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2026年1月26日
+        最終更新日: 2026年1月27日
       </Text>
 
       <View style={styles.section}>
@@ -37,7 +37,7 @@ export default function DisclaimerScreen() {
           • 「すべてのデータを削除」機能の実行{'\n'}
           • その他の予期しない技術的問題{'\n\n'}
           【クラウドデータ（クラウド同期有効時）】{'\n'}
-          • クラウドに同期できる書籍は現在100冊までです。100冊を超える分はデバイス内にのみ保存されます{'\n'}
+          • クラウドに同期できる書籍は現在50冊までです。50冊を超える分はデバイス内にのみ保存されます{'\n'}
           • サインアウトしてもクラウドデータは保持されます{'\n'}
           • 「すべてのデータを削除」実行時に「クラウドも削除」を選択するとクラウドデータも削除されます{'\n'}
           • 「ローカルのみ」を選択した場合、クラウドデータは保持されます{'\n\n'}

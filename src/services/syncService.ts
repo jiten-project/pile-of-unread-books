@@ -4,6 +4,7 @@ import {
   getBooksNeedingSync,
   getBooksPendingDelete,
   updateSyncStatus,
+  updateSyncStatusBatch,
   insertBook,
   updateBook,
   deleteBook as deleteLocalBook,
@@ -112,21 +113,29 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
     const isPremium = false; // TODO: 将来的にはユーザー情報から取得
     const syncEligibleIds = getSyncEligibleBookIds(localBooks, isPremium);
 
-    // 同期ステータスを更新
+    // 同期ステータスを更新（バッチ処理）
     // - 上限超過の本を local_only としてマーク
     // - 上限内に戻った local_only の本を pending に昇格
+    const idsToPromote: string[] = [];
+    const idsToMarkLocalOnly: string[] = [];
+
     for (const book of localBooks) {
       if (syncEligibleIds.has(book.id)) {
-        // 上限内: local_only だった本は pending に昇格して同期対象に戻す
         if (book.syncStatus === 'local_only') {
-          await updateSyncStatus(book.id, 'pending', userId);
+          idsToPromote.push(book.id);
         }
       } else {
-        // 上限超過: local_only でなければ local_only にマーク
         if (book.syncStatus !== 'local_only') {
-          await updateSyncStatus(book.id, 'local_only', userId);
+          idsToMarkLocalOnly.push(book.id);
         }
       }
+    }
+
+    if (idsToPromote.length > 0) {
+      await updateSyncStatusBatch(idsToPromote, 'pending', userId);
+    }
+    if (idsToMarkLocalOnly.length > 0) {
+      await updateSyncStatusBatch(idsToMarkLocalOnly, 'local_only', userId);
     }
 
     // 2. クラウドの全データを取得
@@ -183,16 +192,20 @@ export async function performFullSync(userId: string): Promise<SyncResult> {
         await upsertBooksToCloud(booksToUpload, userId);
         result.uploaded = booksToUpload.length;
 
-        // アップロード成功した本の同期ステータスを更新
-        for (const book of booksToUpload) {
-          await updateSyncStatus(book.id, 'synced', userId);
-        }
+        // アップロード成功した本の同期ステータスを一括更新
+        await updateSyncStatusBatch(
+          booksToUpload.map(b => b.id),
+          'synced',
+          userId
+        );
       } catch (error) {
         result.errors.push(`アップロードに失敗: ${error instanceof Error ? error.message : String(error)}`);
-        // 失敗した本のステータスを error に
-        for (const book of booksToUpload) {
-          await updateSyncStatus(book.id, 'error', userId);
-        }
+        // 失敗した本のステータスを一括で error に
+        await updateSyncStatusBatch(
+          booksToUpload.map(b => b.id),
+          'error',
+          userId
+        );
       }
     }
 
@@ -294,21 +307,29 @@ export async function performIncrementalSync(userId: string): Promise<SyncResult
       syncEligibleIds.has(book.id)
     );
 
-    // 同期ステータスを更新
+    // 同期ステータスを更新（バッチ処理）
     // - 上限超過の本を local_only としてマーク
     // - 上限内に戻った local_only の本を pending に昇格
+    const idsToPromoteIncr: string[] = [];
+    const idsToMarkLocalOnlyIncr: string[] = [];
+
     for (const book of localBooks) {
       if (syncEligibleIds.has(book.id)) {
-        // 上限内: local_only だった本は pending に昇格して同期対象に戻す
         if (book.syncStatus === 'local_only') {
-          await updateSyncStatus(book.id, 'pending', userId);
+          idsToPromoteIncr.push(book.id);
         }
       } else {
-        // 上限超過: local_only でなければ local_only にマーク
         if (book.syncStatus !== 'local_only') {
-          await updateSyncStatus(book.id, 'local_only', userId);
+          idsToMarkLocalOnlyIncr.push(book.id);
         }
       }
+    }
+
+    if (idsToPromoteIncr.length > 0) {
+      await updateSyncStatusBatch(idsToPromoteIncr, 'pending', userId);
+    }
+    if (idsToMarkLocalOnlyIncr.length > 0) {
+      await updateSyncStatusBatch(idsToMarkLocalOnlyIncr, 'local_only', userId);
     }
 
     if (booksNeedingSync.length === 0) {
@@ -321,19 +342,23 @@ export async function performIncrementalSync(userId: string): Promise<SyncResult
       await upsertBooksToCloud(booksNeedingSync, userId);
       result.uploaded = booksNeedingSync.length;
 
-      // 同期ステータスを更新
-      for (const book of booksNeedingSync) {
-        await updateSyncStatus(book.id, 'synced', userId);
-      }
+      // 同期ステータスを一括更新
+      await updateSyncStatusBatch(
+        booksNeedingSync.map(b => b.id),
+        'synced',
+        userId
+      );
 
       result.success = true;
     } catch (error) {
       result.errors.push(`アップロードに失敗: ${error instanceof Error ? error.message : String(error)}`);
 
-      // 失敗した本のステータスを error に
-      for (const book of booksNeedingSync) {
-        await updateSyncStatus(book.id, 'error', userId);
-      }
+      // 失敗した本のステータスを一括で error に
+      await updateSyncStatusBatch(
+        booksNeedingSync.map(b => b.id),
+        'error',
+        userId
+      );
     }
   } catch (error) {
     result.errors.push(`同期に失敗: ${error instanceof Error ? error.message : String(error)}`);

@@ -1,6 +1,8 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Book } from '../types';
-import { STATUS_COLORS } from '../constants';
+import { STATUS_COLORS, DEVICE } from '../constants';
+import { useSettings } from '../contexts';
+import { getDaysSince } from '../utils';
 
 interface BookGridItemProps {
   book: Book;
@@ -8,6 +10,10 @@ interface BookGridItemProps {
 }
 
 export default function BookGridItem({ book, onPress }: BookGridItemProps) {
+  const { isTsundoku } = useSettings();
+  const tsundokuDays = getDaysSince(book.purchaseDate || book.createdAt);
+  const showTsundokuDays = isTsundoku(book.status);
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.imageContainer}>
@@ -21,6 +27,11 @@ export default function BookGridItem({ book, onPress }: BookGridItemProps) {
           </View>
         )}
         <View style={[styles.statusIndicator, { backgroundColor: STATUS_COLORS[book.status] }]} />
+        {showTsundokuDays && (
+          <View style={styles.daysBadge}>
+            <Text style={styles.daysBadgeText}>{tsundokuDays}日</Text>
+          </View>
+        )}
       </View>
       <Text style={styles.title} numberOfLines={2}>
         {book.title}
@@ -32,9 +43,12 @@ export default function BookGridItem({ book, onPress }: BookGridItemProps) {
   );
 }
 
+// iPadでは5列、iPhoneでは3列
+const GRID_ITEM_WIDTH = DEVICE.isTablet ? '18.5%' : '31%';
+
 const styles = StyleSheet.create({
   container: {
-    width: '31%',
+    width: GRID_ITEM_WIDTH,
     marginBottom: 16,
   },
   imageContainer: {
@@ -72,6 +86,20 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 4,
+  },
+  daysBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#E91E63',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  daysBadgeText: {
+    fontSize: 9,
+    color: '#fff',
+    fontWeight: '600',
   },
   title: {
     fontSize: 12,
