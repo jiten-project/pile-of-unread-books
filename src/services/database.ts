@@ -114,22 +114,31 @@ async function runMigrations(): Promise<void> {
     if (migration.version > currentVersion) {
       try {
         await db.execAsync(migration.sql);
+        // 成功した場合のみバージョンを記録
         await db.runAsync(
           'INSERT INTO schema_version (version) VALUES (?)',
           [migration.version]
         );
         console.log(`Migration ${migration.version} applied: ${migration.description}`);
       } catch (error) {
-        // カラムが既に存在する場合などは無視（ALTER TABLE対策）
-        console.log(`Migration ${migration.version} skipped (already applied): ${migration.description}`);
-        // バージョンは記録しておく
-        try {
-          await db.runAsync(
-            'INSERT OR IGNORE INTO schema_version (version) VALUES (?)',
-            [migration.version]
-          );
-        } catch {
-          // 無視
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        // カラムが既に存在する場合のみスキップ扱い
+        if (errorMessage.includes('duplicate column name')) {
+          console.log(`Migration ${migration.version} skipped (column already exists): ${migration.description}`);
+          // この場合のみバージョンを記録
+          try {
+            await db.runAsync(
+              'INSERT OR IGNORE INTO schema_version (version) VALUES (?)',
+              [migration.version]
+            );
+          } catch {
+            // 無視
+          }
+        } else {
+          // その他のエラーは再スロー（DBロック、ディスクフル、テーブル不在など）
+          console.error(`Migration ${migration.version} failed: ${migration.description}`, error);
+          throw error;
         }
       }
     }
