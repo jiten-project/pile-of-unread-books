@@ -15,7 +15,7 @@ export interface FilterOptions {
   statuses: BookStatus[];
   priorities: Priority[];
   tags: string[];
-  sortBy: 'createdAt' | 'title' | 'authors' | 'purchaseDate' | 'tsundokuDays';
+  sortBy: 'createdAt' | 'tsundokuDays';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -29,9 +29,6 @@ interface FilterModalProps {
 
 const SORT_OPTIONS: { value: FilterOptions['sortBy']; label: string }[] = [
   { value: 'createdAt', label: '登録日' },
-  { value: 'title', label: 'タイトル' },
-  { value: 'authors', label: '著者' },
-  { value: 'purchaseDate', label: '購入日' },
   { value: 'tsundokuDays', label: '積読期間' },
 ];
 

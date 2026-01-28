@@ -130,37 +130,58 @@ export default function BookshelfScreen() {
     // ソート
     result = [...result].sort((a, b) => {
       let comparison = 0;
-      switch (advancedFilters.sortBy) {
-        case 'title':
-          comparison = a.title.localeCompare(b.title, 'ja');
-          break;
-        case 'authors':
-          comparison = (a.authors[0] || '').localeCompare(b.authors[0] || '', 'ja');
-          break;
-        case 'purchaseDate':
-          comparison = (a.purchaseDate || '').localeCompare(b.purchaseDate || '');
-          break;
-        case 'tsundokuDays': {
-          // 積読設定に含まれるステータスのみ積読期間を算出
-          const isTsundokuA = isTsundoku(a.status);
-          const isTsundokuB = isTsundoku(b.status);
 
-          // 積読でないものは後ろに配置
-          if (isTsundokuA && !isTsundokuB) {
-            comparison = -1;
-            break;
-          }
-          if (!isTsundokuA && isTsundokuB) {
-            comparison = 1;
-            break;
-          }
+      // 積読期間ソートの場合の特別処理
+      if (advancedFilters.sortBy === 'tsundokuDays') {
+        // 解放・ほしいは常に最後（昇順/降順に関係なく）
+        const isAlwaysLastA = a.status === 'released' || a.status === 'wishlist';
+        const isAlwaysLastB = b.status === 'released' || b.status === 'wishlist';
+        if (isAlwaysLastA && !isAlwaysLastB) return 1;
+        if (!isAlwaysLastA && isAlwaysLastB) return -1;
+        if (isAlwaysLastA && isAlwaysLastB) {
+          // 両方最後のグループなら解放→ほしいの順
+          if (a.status === 'released' && b.status === 'wishlist') return -1;
+          if (a.status === 'wishlist' && b.status === 'released') return 1;
+          return 0;
+        }
 
-          // 両方積読、または両方積読でない場合は日付で比較
+        const isTsundokuA = isTsundoku(a.status);
+        const isTsundokuB = isTsundoku(b.status);
+
+        // 両方とも積読の場合は日付で比較
+        if (isTsundokuA && isTsundokuB) {
           const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
           const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
-          comparison = dateA - dateB;
-          break;
+          comparison = dateB - dateA;
+          return advancedFilters.sortOrder === 'asc' ? comparison : -comparison;
         }
+
+        // 積読 vs 非積読: 積読を先に
+        if (isTsundokuA && !isTsundokuB) return -1;
+        if (!isTsundokuA && isTsundokuB) return 1;
+
+        // 両方とも非積読の場合（読了、読書中、中断）
+        // 読了→読書中→中断の順で積読期間が短いと判断
+        const statusPriority: Record<string, number> = {
+          completed: 1,  // 読了: 最も積読期間が短い
+          reading: 2,    // 読書中
+          paused: 3,     // 中断
+        };
+        const priorityA = statusPriority[a.status] || 50;
+        const priorityB = statusPriority[b.status] || 50;
+        if (priorityA !== priorityB) {
+          comparison = priorityA - priorityB;
+          return advancedFilters.sortOrder === 'asc' ? comparison : -comparison;
+        }
+
+        // 同じステータスなら日付で比較
+        const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
+        const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
+        comparison = dateB - dateA;
+        return advancedFilters.sortOrder === 'asc' ? comparison : -comparison;
+      }
+
+      switch (advancedFilters.sortBy) {
         case 'createdAt':
         default:
           comparison = a.createdAt.localeCompare(b.createdAt);
