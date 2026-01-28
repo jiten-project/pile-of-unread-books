@@ -45,7 +45,7 @@ export default function BookshelfScreen() {
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
-  const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
+  const { showWishlistInBookshelf, showReleasedInBookshelf, isTsundoku } = useSettings();
 
   // 設定がOFFになった場合、対応するフィルターをリセット
   useEffect(() => {
@@ -141,7 +141,21 @@ export default function BookshelfScreen() {
           comparison = (a.purchaseDate || '').localeCompare(b.purchaseDate || '');
           break;
         case 'tsundokuDays': {
-          // 購入日（なければ登録日）からの経過日数でソート
+          // 積読設定に含まれるステータスのみ積読期間を算出
+          const isTsundokuA = isTsundoku(a.status);
+          const isTsundokuB = isTsundoku(b.status);
+
+          // 積読でないものは後ろに配置
+          if (isTsundokuA && !isTsundokuB) {
+            comparison = -1;
+            break;
+          }
+          if (!isTsundokuA && isTsundokuB) {
+            comparison = 1;
+            break;
+          }
+
+          // 両方積読、または両方積読でない場合は日付で比較
           const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
           const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
           comparison = dateA - dateB;
@@ -156,7 +170,7 @@ export default function BookshelfScreen() {
     });
 
     return result;
-  }, [books, selectedFilter, searchQuery, advancedFilters, showWishlistInBookshelf, showReleasedInBookshelf]);
+  }, [books, selectedFilter, searchQuery, advancedFilters, showWishlistInBookshelf, showReleasedInBookshelf, isTsundoku]);
 
   const handleBookPress = useCallback(
     (bookId: string) => {

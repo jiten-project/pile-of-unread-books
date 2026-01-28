@@ -35,6 +35,11 @@ const SORT_OPTIONS: { value: FilterOptions['sortBy']; label: string }[] = [
   { value: 'tsundokuDays', label: '積読期間' },
 ];
 
+const SORT_ORDER_OPTIONS: { value: FilterOptions['sortOrder']; label: string }[] = [
+  { value: 'asc', label: '昇順 ↑' },
+  { value: 'desc', label: '降順 ↓' },
+];
+
 export default function FilterModal({
   visible,
   onClose,
@@ -83,11 +88,8 @@ export default function FilterModal({
     setLocalFilters(prev => ({ ...prev, sortBy }));
   };
 
-  const handleSortOrderToggle = () => {
-    setLocalFilters(prev => ({
-      ...prev,
-      sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
-    }));
+  const handleSortOrderChange = (sortOrder: FilterOptions['sortOrder']) => {
+    setLocalFilters(prev => ({ ...prev, sortOrder }));
   };
 
   const handleReset = () => {
@@ -260,14 +262,32 @@ export default function FilterModal({
                   );
                 })}
               </View>
-              <TouchableOpacity
-                style={[styles.orderToggle, { backgroundColor: colors.background }]}
-                onPress={handleSortOrderToggle}
-              >
-                <Text style={{ color: colors.textSecondary }}>
-                  {localFilters.sortOrder === 'desc' ? '降順 ↓' : '昇順 ↑'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.sortOrderContainer}>
+                {SORT_ORDER_OPTIONS.map(option => {
+                  const isSelected = localFilters.sortOrder === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.sortOrderButton,
+                        themedStyles.sortButton,
+                        isSelected && themedStyles.sortButtonSelected,
+                      ]}
+                      onPress={() => handleSortOrderChange(option.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.sortButtonText,
+                          themedStyles.sortButtonText,
+                          isSelected && themedStyles.sortButtonSelectedText,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </ScrollView>
 
@@ -349,6 +369,16 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  sortOrderContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  sortOrderButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
   sortButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -357,12 +387,6 @@ const styles = StyleSheet.create({
   },
   sortButtonText: {
     fontSize: 14,
-  },
-  orderToggle: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
   },
   footer: {
     flexDirection: 'row',
