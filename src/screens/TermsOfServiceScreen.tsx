@@ -11,7 +11,7 @@ export default function TermsOfServiceScreen() {
     >
       <Text style={[styles.title, { color: colors.textPrimary }]}>利用規約</Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2026年1月27日
+        最終更新日: 2026年1月29日
       </Text>
 
       <View style={styles.section}>
@@ -73,7 +73,8 @@ export default function TermsOfServiceScreen() {
           3. クラウドデータの保存にはSupabaseを利用しています。{'\n'}
           4. 各APIを通じて取得される書籍情報（タイトル、著者、表紙画像等）の著作権は、各権利者に帰属します。{'\n'}
           5. 表紙画像は外部サーバーから直接取得・表示されるものであり、本アプリ内に保存・再配布されることはありません。{'\n'}
-          6. 外部サービスの仕様変更や停止により、一部機能が利用できなくなる場合があります。
+          6. 外部サービスの仕様変更や停止により、一部機能が利用できなくなる場合があります。{'\n'}
+          7. APIから自動取得される書籍情報（ページ数、定価等）は、API提供元のデータに依存するため、実際の書籍と異なる場合やデータがない場合があります。これらの情報の正確性について開発者は保証しません。
         </Text>
       </View>
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAuth } from '../contexts';
 import { useBookStore } from '../store';
-import { getAllBooks } from '../services/database';
+import { getAllBooks, isDatabaseReady } from '../services/database';
 import {
   SyncState,
   SyncResult,
@@ -12,6 +12,7 @@ import {
 } from '../services/syncService';
 import { useNetworkStatus } from './useNetworkStatus';
 import { SUBSCRIPTION } from '../constants';
+import { logError } from '../utils/logger';
 
 // 同期の最小間隔（ミリ秒）
 const MIN_SYNC_INTERVAL = 30000; // 30秒
@@ -96,7 +97,7 @@ export function useSync(): UseSyncReturn {
       setSyncState(result.success ? 'idle' : 'error');
       return result;
     } catch (error) {
-      console.error('Sync failed:', error);
+      logError('sync:perform', error);
       setSyncState('error');
       return {
         success: false,
@@ -131,6 +132,11 @@ export function useSync(): UseSyncReturn {
 
   // 初回同期（ログイン時）
   useEffect(() => {
+    // データベースが初期化されるまで待つ
+    if (!isDatabaseReady()) {
+      return;
+    }
+
     if (user && isOnline && !hasInitialSynced) {
       const doInitialSync = async () => {
         syncInProgressRef.current = true;
@@ -149,7 +155,7 @@ export function useSync(): UseSyncReturn {
           setSyncState(result.success ? 'idle' : 'error');
           setHasInitialSynced(true);
         } catch (error) {
-          console.error('Initial sync failed:', error);
+          logError('sync:initial', error);
           setSyncState('error');
         } finally {
           syncInProgressRef.current = false;

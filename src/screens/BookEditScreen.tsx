@@ -14,9 +14,10 @@ import { FormInput, SelectInput, TagInput, DateInput } from '../components';
 import { usePersistBook } from '../hooks';
 import { useBookStore } from '../store';
 import { BookStatus, Priority, BookCondition, RootStackParamList, RootStackNavigationProp } from '../types';
-import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
+import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS, DEVICE } from '../constants';
 import { useTheme } from '../contexts';
 import { parsePrice } from '../utils';
+import { logError } from '../utils/logger';
 
 type BookEditRouteProp = RouteProp<RootStackParamList, 'BookEdit'>;
 
@@ -125,6 +126,15 @@ export default function BookEditScreen() {
     sectionTitle: { color: colors.textPrimary },
   };
 
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    content: { padding: 24, paddingBottom: 60 },
+    sectionTitle: { fontSize: 24, marginTop: 12, marginBottom: 20 },
+    textArea: { height: 120 },
+    submitButton: { paddingVertical: 20, borderRadius: 16, marginTop: 32 },
+    submitButtonText: { fontSize: 22 },
+  } : {};
+
   if (!book) {
     return (
       <View style={[styles.container, themedStyles.container]}>
@@ -161,11 +171,11 @@ export default function BookEditScreen() {
 
     setIsSubmitting(true);
     try {
-      // YYYY-MM-DD形式をISO文字列に変換
+      // YYYY-MM-DD形式をISO文字列に変換（UTCとして扱う）
       const parsePurchaseDate = (dateStr: string): string | undefined => {
         if (!dateStr.trim()) return undefined;
-        const date = new Date(dateStr + 'T00:00:00');
-        return date.toISOString();
+        // UTCの正午として保存（タイムゾーンによる日付ずれを防ぐ）
+        return dateStr + 'T12:00:00.000Z';
       };
 
       await updateBook(bookId, {
@@ -194,7 +204,7 @@ export default function BookEditScreen() {
       ]);
     } catch (error) {
       Alert.alert('エラー', '更新に失敗しました');
-      console.error(error);
+      logError('bookEdit', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -205,8 +215,8 @@ export default function BookEditScreen() {
       style={[styles.container, themedStyles.container]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>基本情報</Text>
+      <ScrollView style={styles.scrollView} contentContainerStyle={[styles.content, tabletStyles.content]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>基本情報</Text>
 
         <FormInput
           label="タイトル"
@@ -256,7 +266,7 @@ export default function BookEditScreen() {
           keyboardType="numeric"
         />
 
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>ステータス</Text>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>ステータス</Text>
 
         <SelectInput
           label="読書ステータス"
@@ -272,7 +282,7 @@ export default function BookEditScreen() {
           onChange={v => updateField('priority', v)}
         />
 
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>購入情報</Text>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>購入情報</Text>
 
         <SelectInput
           label="本の状態"
@@ -310,10 +320,10 @@ export default function BookEditScreen() {
           placeholder="なぜこの本を買ったか"
           multiline
           numberOfLines={2}
-          style={styles.textArea}
+          style={[styles.textArea, tabletStyles.textArea]}
         />
 
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>分類・メモ</Text>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>分類・メモ</Text>
 
         <TagInput
           label="タグ"
@@ -328,15 +338,15 @@ export default function BookEditScreen() {
           placeholder="自由にメモを記入"
           multiline
           numberOfLines={3}
-          style={styles.textArea}
+          style={[styles.textArea, tabletStyles.textArea]}
         />
 
         <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          style={[styles.submitButton, tabletStyles.submitButton, isSubmitting && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
-          <Text style={styles.submitButtonText}>
+          <Text style={[styles.submitButtonText, tabletStyles.submitButtonText]}>
             {isSubmitting ? '更新中...' : '変更を保存する'}
           </Text>
         </TouchableOpacity>
