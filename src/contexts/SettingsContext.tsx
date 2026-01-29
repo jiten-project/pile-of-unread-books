@@ -49,6 +49,8 @@ interface SettingsContextType {
   setShowWishlistInBookshelf: (show: boolean) => Promise<void>;
   showReleasedInBookshelf: boolean;
   setShowReleasedInBookshelf: (show: boolean) => Promise<void>;
+  showMaturity: boolean;
+  setShowMaturity: (show: boolean) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -56,6 +58,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 const TSUNDOKU_DEFINITION_KEY = '@tsundoku_definition';
 const SHOW_WISHLIST_KEY = '@show_wishlist_in_bookshelf';
 const SHOW_RELEASED_KEY = '@show_released_in_bookshelf';
+const SHOW_MATURITY_KEY = '@show_maturity';
 
 interface SettingsProviderProps {
   children: ReactNode;
@@ -67,6 +70,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   );
   const [showWishlistInBookshelf, setShowWishlistState] = useState(false);
   const [showReleasedInBookshelf, setShowReleasedState] = useState(false);
+  const [showMaturity, setShowMaturityState] = useState(true); // デフォルトON
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -75,10 +79,11 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
   const loadSettings = async () => {
     try {
-      const [savedTsundoku, savedShowWishlist, savedShowReleased] = await Promise.all([
+      const [savedTsundoku, savedShowWishlist, savedShowReleased, savedShowMaturity] = await Promise.all([
         AsyncStorage.getItem(TSUNDOKU_DEFINITION_KEY),
         AsyncStorage.getItem(SHOW_WISHLIST_KEY),
         AsyncStorage.getItem(SHOW_RELEASED_KEY),
+        AsyncStorage.getItem(SHOW_MATURITY_KEY),
       ]);
       if (savedTsundoku) {
         const parsed = JSON.parse(savedTsundoku);
@@ -89,6 +94,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       }
       if (savedShowReleased !== null) {
         setShowReleasedState(JSON.parse(savedShowReleased));
+      }
+      if (savedShowMaturity !== null) {
+        setShowMaturityState(JSON.parse(savedShowMaturity));
       }
     } catch (error) {
       logError('settings:load', error);
@@ -121,6 +129,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       setShowReleasedState(show);
     } catch (error) {
       logError('settings:saveReleased', error);
+    }
+  };
+
+  const setShowMaturity = async (show: boolean) => {
+    try {
+      await AsyncStorage.setItem(SHOW_MATURITY_KEY, JSON.stringify(show));
+      setShowMaturityState(show);
+    } catch (error) {
+      logError('settings:saveMaturity', error);
     }
   };
 
@@ -179,8 +196,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       setShowWishlistInBookshelf,
       showReleasedInBookshelf,
       setShowReleasedInBookshelf,
+      showMaturity,
+      setShowMaturity,
     }),
-    [tsundokuDefinition, currentPreset, showWishlistInBookshelf, showReleasedInBookshelf]
+    [tsundokuDefinition, currentPreset, showWishlistInBookshelf, showReleasedInBookshelf, showMaturity]
   );
 
   if (isLoading) {
