@@ -13,6 +13,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.4.0',
+    date: '2026-01-30',
+    features: [
+      '熟成度表示機能を追加（積読日数に応じて新酒〜幻の逸品まで8段階で表示）',
+      '日付のワンクリック設定（購入日・読書開始日・読了日を「今日」ボタンで即設定）',
+    ],
+    improvements: [
+      '統計画面の単位を「P」から「頁」に変更',
+      '「読了率」を「積読率」に変更し、算出ロジックを改善',
+      '積読の定義のデフォルトを「穏健派」に変更',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-01-29',
     improvements: [
