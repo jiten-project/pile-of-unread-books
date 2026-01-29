@@ -34,7 +34,7 @@ export default function SettingsScreen() {
   const { books, setBooks } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors, themeMode, setThemeMode } = useTheme();
-  const { tsundokuDefinition, setTsundokuDefinition, currentPreset, showWishlistInBookshelf, setShowWishlistInBookshelf, showReleasedInBookshelf, setShowReleasedInBookshelf } = useSettings();
+  const { tsundokuDefinition, setTsundokuDefinition, currentPreset, showWishlistInBookshelf, setShowWishlistInBookshelf, showReleasedInBookshelf, setShowReleasedInBookshelf, showMaturity, setShowMaturity } = useSettings();
   const { updateStatus } = usePersistBook();
   const { user, isLoading: isAuthLoading, isAppleAuthAvailable, signInWithApple, signOut } = useAuth();
   const { syncState, lastSyncTime, triggerFullSync, cloudSyncCount, cloudSyncLimit, isPremium } = useSyncContext();
@@ -539,6 +539,23 @@ export default function SettingsScreen() {
             style={isTablet ? { transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] } : undefined}
           />
         </View>
+        <View style={[styles.switchRow, tabletStyles.switchRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={[styles.switchLabel, tabletStyles.switchLabel, { color: colors.textPrimary }]}>
+              熟成度を表示
+            </Text>
+            <Text style={[styles.switchDescription, tabletStyles.switchDescription, { color: colors.textTertiary }]}>
+              積読日数に応じた熟成度を本の詳細に表示
+            </Text>
+          </View>
+          <Switch
+            value={showMaturity}
+            onValueChange={setShowMaturity}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={showMaturity ? '#fff' : '#f4f3f4'}
+            style={isTablet ? { transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] } : undefined}
+          />
+        </View>
       </View>
 
       <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
@@ -810,7 +827,7 @@ export default function SettingsScreen() {
 
         <View style={[styles.infoRow, tabletStyles.infoRow, themedStyles.menuBorder]}>
           <Text style={[styles.infoLabel, tabletStyles.infoLabel, themedStyles.infoLabel]}>バージョン</Text>
-          <Text style={[styles.infoValue, tabletStyles.infoValue, themedStyles.infoValue]}>1.3.0</Text>
+          <Text style={[styles.infoValue, tabletStyles.infoValue, themedStyles.infoValue]}>1.4.0</Text>
         </View>
 
         <View style={[styles.infoRow, tabletStyles.infoRow, themedStyles.menuBorder]}>
@@ -880,7 +897,7 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={[styles.footer, tabletStyles.footer, themedStyles.footer]}>
-        積読本管理 v1.3.0
+        積読本管理 v1.4.0
       </Text>
     </ScrollView>
   );

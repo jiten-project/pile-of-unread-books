@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: DEVICE.isTablet ? 16 : 20,
+    marginBottom: DEVICE.isTablet ? 16 : 14,
     gap: 12,
   },
   tsundokuRow: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     marginBottom: DEVICE.isTablet ? 12 : 0,
   },
   greeting: {
-    fontSize: DEVICE.isTablet ? 40 : 28,
+    fontSize: DEVICE.isTablet ? 40 : 24,
     fontWeight: 'bold',
   },
   total: {
@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
   tsundokuCard: {
     flex: DEVICE.isTablet ? 1 : undefined,
     borderRadius: 12,
-    padding: DEVICE.isTablet ? 16 : 20,
-    marginBottom: DEVICE.isTablet ? 0 : 16,
+    padding: DEVICE.isTablet ? 16 : 16,
+    marginBottom: DEVICE.isTablet ? 0 : 12,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -328,10 +328,10 @@ const styles = StyleSheet.create({
   tsundokuHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: DEVICE.isTablet ? 6 : 8,
+    marginBottom: DEVICE.isTablet ? 6 : 4,
   },
   tsundokuIcon: {
-    fontSize: DEVICE.isTablet ? 30 : 24,
+    fontSize: DEVICE.isTablet ? 30 : 20,
     marginRight: 8,
   },
   tsundokuLabel: {
@@ -339,11 +339,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tsundokuValue: {
-    fontSize: DEVICE.isTablet ? 52 : 48,
+    fontSize: DEVICE.isTablet ? 52 : 40,
     fontWeight: 'bold',
   },
   tsundokuUnit: {
-    fontSize: DEVICE.isTablet ? 22 : 20,
+    fontSize: DEVICE.isTablet ? 22 : 18,
     fontWeight: 'normal',
   },
   statsGrid: {
@@ -351,13 +351,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: DEVICE.isTablet ? 8 : 0,
-    marginBottom: DEVICE.isTablet ? 12 : 20,
+    marginBottom: DEVICE.isTablet ? 12 : 12,
   },
   statCard: {
     // 幅はcardWidth propで動的に設定
-    marginBottom: DEVICE.isTablet ? 10 : 12,
+    marginBottom: DEVICE.isTablet ? 10 : 8,
     borderRadius: 12,
-    padding: DEVICE.isTablet ? 10 : 16,
+    padding: DEVICE.isTablet ? 10 : 12,
     borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -366,11 +366,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   statIcon: {
-    fontSize: DEVICE.isTablet ? 26 : 24,
-    marginBottom: DEVICE.isTablet ? 6 : 8,
+    fontSize: DEVICE.isTablet ? 26 : 20,
+    marginBottom: DEVICE.isTablet ? 6 : 4,
   },
   statValue: {
-    fontSize: DEVICE.isTablet ? 32 : 32,
+    fontSize: DEVICE.isTablet ? 32 : 28,
     fontWeight: 'bold',
   },
   statLabel: {
@@ -395,32 +395,32 @@ const styles = StyleSheet.create({
   },
   summaryRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 10,
   },
   summaryCard: {
     flex: 1,
     borderRadius: 12,
-    padding: 12,
+    padding: 10,
     borderWidth: 1,
     alignItems: 'center',
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: 11,
     textAlign: 'center',
   },
   summaryValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 4,
+    marginTop: 2,
     textAlign: 'center',
   },
   section: {
-    marginBottom: DEVICE.isTablet ? 14 : 20,
+    marginBottom: DEVICE.isTablet ? 14 : 16,
   },
   sectionTitle: {
-    fontSize: DEVICE.isTablet ? 26 : 18,
+    fontSize: DEVICE.isTablet ? 26 : 16,
     fontWeight: 'bold',
-    marginBottom: DEVICE.isTablet ? 14 : 12,
+    marginBottom: DEVICE.isTablet ? 14 : 8,
   },
 });
