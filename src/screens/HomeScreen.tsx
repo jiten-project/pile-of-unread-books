@@ -1,16 +1,14 @@
 import { useMemo, useCallback, useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { BookCard, EmptyState } from '../components';
 import { STATUS_LABELS, STATUS_COLORS } from '../constants';
 import { DEVICE } from '../constants/theme';
 import { AppNavigationProp } from '../types';
-import { getDaysSince, formatPrice, joinWithComma } from '../utils';
+import { formatPrice } from '../utils';
 import { useTheme, useSettings } from '../contexts';
-
-// iPad用スケールファクター
-const SCALE = DEVICE.isTablet ? 1.5 : 1.0;
+import { useTsundokuStats } from '../hooks';
 
 // 積読に関する名言・メッセージ
 const TSUNDOKU_MESSAGES = [
@@ -35,8 +33,6 @@ const TSUNDOKU_MESSAGES = [
   '読まなくても、そこにある安心感',
   '積読は静かな決意表明',
   '愛読書は「カラマーゾフの兄弟」ですって、言いたい',
-  'あ、それ原書で読んだって言いたくて買ってみた',
-  'PTAのこの映画の原作、ピンチョンなんだって、本棚にあったな',
   '「純粋理性批判」、学生の頃に挑戦したなあ',
 ];
 
@@ -44,7 +40,10 @@ export default function HomeScreen() {
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
-  const { isTsundoku } = useSettings();
+  const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
+
+  // 積読統計（カスタムフックで一元管理）
+  const { tsundokuCount, tsundokuSpent, oldestTsundoku } = useTsundokuStats();
 
   // ランダムメッセージ（1分ごとに更新）
   const [randomMessage, setRandomMessage] = useState('');
@@ -64,53 +63,33 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const stats = useMemo(() => {
-    const unread = books.filter(b => b.status === 'unread').length;
-    const reading = books.filter(b => b.status === 'reading').length;
-    const completed = books.filter(b => b.status === 'completed').length;
-    const paused = books.filter(b => b.status === 'paused').length;
-
-    // ユーザー定義に基づく積読数
-    const tsundokuCount = books.filter(b => isTsundoku(b.status)).length;
-
-    const thisMonth = new Date();
-    thisMonth.setDate(1);
-    thisMonth.setHours(0, 0, 0, 0);
-    const completedThisMonth = books.filter(
-      b => b.completedDate && new Date(b.completedDate) >= thisMonth
-    ).length;
-
-    // ユーザー定義に基づく積読本の購入総額
-    const totalTsundokuPrice = books
-      .filter(b => isTsundoku(b.status) && b.purchasePrice)
-      .reduce((sum, b) => sum + (b.purchasePrice || 0), 0);
-
-    // ユーザー定義に基づく最も古い積読本（購入日基準、なければ登録日）
-    const oldestTsundoku = books
-      .filter(b => isTsundoku(b.status))
-      .sort((a, b) => {
-        const dateA = a.purchaseDate || a.createdAt;
-        const dateB = b.purchaseDate || b.createdAt;
-        return new Date(dateA).getTime() - new Date(dateB).getTime();
-      })[0];
-
+  // ステータス別カウント
+  const statusCounts = useMemo(() => {
     return {
-      unread,
-      reading,
-      completed,
-      paused,
-      tsundokuCount,
-      total: books.length,
-      completedThisMonth,
-      totalTsundokuPrice,
-      oldestTsundoku,
+      wishlist: books.filter(b => b.status === 'wishlist').length,
+      unread: books.filter(b => b.status === 'unread').length,
+      reading: books.filter(b => b.status === 'reading').length,
+      completed: books.filter(b => b.status === 'completed').length,
+      paused: books.filter(b => b.status === 'paused').length,
+      released: books.filter(b => b.status === 'released').length,
     };
-  }, [books, isTsundoku]);
+  }, [books]);
 
   const readingBooks = useMemo(
     () => books.filter(b => b.status === 'reading').slice(0, 3),
     [books]
   );
+
+  // iPadでの統計カードの幅を動的に計算（表示数に応じて調整）
+  const statCardWidth = useMemo(() => {
+    if (!DEVICE.isTablet) return '48.5%'; // iPhoneは2列固定
+    // 基本4個 + released + wishlist
+    const count = 4 + (showReleasedInBookshelf ? 1 : 0) + (showWishlistInBookshelf ? 1 : 0);
+    // gap(8px) * (count-1) を考慮して幅を計算
+    // 例: 4個 → 24%, 5個 → 19%, 6個 → 15.5%
+    const widthPercent = Math.floor((100 - (count - 1) * 1.5) / count * 10) / 10;
+    return `${widthPercent}%`;
+  }, [showReleasedInBookshelf, showWishlistInBookshelf]);
 
   const handleBookPress = useCallback(
     (bookId: string) => {
@@ -124,9 +103,6 @@ export default function HomeScreen() {
       container: { backgroundColor: colors.background },
       greeting: { color: colors.textPrimary },
       sectionTitle: { color: colors.textPrimary },
-      oldestCard: { backgroundColor: colors.surface },
-      oldestTitle: { color: colors.textPrimary },
-      oldestAuthor: { color: colors.textSecondary },
       priceCard: {
         backgroundColor: colors.warning + '20',
         borderColor: colors.warning + '40',
@@ -134,9 +110,6 @@ export default function HomeScreen() {
       priceLabel: { color: colors.warning },
       priceValue: { color: colors.warning },
       priceHint: { color: colors.warning + 'CC' },
-      oldestDays: { backgroundColor: colors.error + '20' },
-      oldestDaysValue: { color: colors.error },
-      oldestDaysLabel: { color: colors.error },
     }),
     [colors]
   );
@@ -147,101 +120,127 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
     >
       <View style={styles.header}>
-        <Text style={[styles.greeting, themedStyles.greeting]}>積読本管理</Text>
+        <Text style={[styles.greeting, themedStyles.greeting]}>積読生活</Text>
         {randomMessage && (
           <Text style={[styles.quoteText, { color: colors.textTertiary }]}>
-            「{randomMessage}」
+            {randomMessage}
           </Text>
         )}
       </View>
 
-      {/* 積読カウント（ユーザー定義に基づく） */}
-      <View style={[styles.tsundokuCard, { backgroundColor: colors.surface }]}>
-        <View style={styles.tsundokuHeader}>
-          <Text style={styles.tsundokuIcon}>📚</Text>
-          <Text style={[styles.tsundokuLabel, { color: colors.textSecondary }]}>
-            あなたの積読
+      {/* 積読カウントと購入総額（iPadでは横並び） */}
+      <View style={styles.tsundokuRow}>
+        <View style={[styles.tsundokuCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.tsundokuHeader}>
+            <Text style={styles.tsundokuIcon}>📚</Text>
+            <Text style={[styles.tsundokuLabel, { color: colors.textSecondary }]}>
+              あなたの積読
+            </Text>
+          </View>
+          <Text style={[styles.tsundokuValue, { color: colors.textPrimary }]}>
+            {tsundokuCount}
+            <Text style={styles.tsundokuUnit}> 冊</Text>
           </Text>
         </View>
-        <Text style={[styles.tsundokuValue, { color: colors.textPrimary }]}>
-          {stats.tsundokuCount}
-          <Text style={styles.tsundokuUnit}> 冊</Text>
-        </Text>
+
+        {DEVICE.isTablet && tsundokuSpent > 0 && (
+          <View style={[styles.tsundokuCard, styles.priceCardInRow, themedStyles.priceCard]}>
+            <Text style={[styles.priceLabel, themedStyles.priceLabel]}>積読本の購入総額</Text>
+            <Text style={[styles.priceValue, themedStyles.priceValue]}>
+              {formatPrice(tsundokuSpent)}
+            </Text>
+            <Text style={[styles.priceHint, themedStyles.priceHint]}>読むと元が取れます！</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.statsGrid}>
         <StatCard
           label={STATUS_LABELS.unread}
-          value={stats.unread}
+          value={statusCounts.unread}
           color={STATUS_COLORS.unread}
-          icon="📕"
+          icon="📚"
           cardBgColor={colors.surface}
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}
+          cardWidth={statCardWidth}
         />
         <StatCard
           label={STATUS_LABELS.reading}
-          value={stats.reading}
+          value={statusCounts.reading}
           color={STATUS_COLORS.reading}
           icon="📖"
           cardBgColor={colors.surface}
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}
+          cardWidth={statCardWidth}
         />
         <StatCard
           label={STATUS_LABELS.paused}
-          value={stats.paused}
+          value={statusCounts.paused}
           color={STATUS_COLORS.paused}
           icon="⏸️"
           cardBgColor={colors.surface}
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}
+          cardWidth={statCardWidth}
         />
         <StatCard
           label={STATUS_LABELS.completed}
-          value={stats.completed}
+          value={statusCounts.completed}
           color={STATUS_COLORS.completed}
           icon="✅"
           cardBgColor={colors.surface}
           textColor={colors.textPrimary}
           labelColor={colors.textSecondary}
+          cardWidth={statCardWidth}
         />
+        {showReleasedInBookshelf && (
+          <StatCard
+            label={STATUS_LABELS.released}
+            value={statusCounts.released}
+            color={STATUS_COLORS.released}
+            icon="🕊️"
+            cardBgColor={colors.surface}
+            textColor={colors.textPrimary}
+            labelColor={colors.textSecondary}
+            cardWidth={statCardWidth}
+          />
+        )}
+        {showWishlistInBookshelf && (
+          <StatCard
+            label={STATUS_LABELS.wishlist}
+            value={statusCounts.wishlist}
+            color={STATUS_COLORS.wishlist}
+            icon="💕"
+            cardBgColor={colors.surface}
+            textColor={colors.textPrimary}
+            labelColor={colors.textSecondary}
+            cardWidth={statCardWidth}
+          />
+        )}
       </View>
 
-      {stats.totalTsundokuPrice > 0 && (
+      {!DEVICE.isTablet && tsundokuSpent > 0 && (
         <View style={[styles.priceCard, themedStyles.priceCard]}>
           <Text style={[styles.priceLabel, themedStyles.priceLabel]}>積読本の購入総額</Text>
           <Text style={[styles.priceValue, themedStyles.priceValue]}>
-            {formatPrice(stats.totalTsundokuPrice)}
+            {formatPrice(tsundokuSpent)}
           </Text>
           <Text style={[styles.priceHint, themedStyles.priceHint]}>読むと元が取れます！</Text>
         </View>
       )}
 
-      {stats.oldestTsundoku && (
+      {oldestTsundoku && (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>
             最も長く積んでいる本
           </Text>
-          <TouchableOpacity
-            style={[styles.oldestCard, themedStyles.oldestCard]}
-            onPress={() => handleBookPress(stats.oldestTsundoku!.id)}
-          >
-            <View style={styles.oldestInfo}>
-              <Text style={[styles.oldestTitle, themedStyles.oldestTitle]} numberOfLines={1}>
-                {stats.oldestTsundoku.title}
-              </Text>
-              <Text style={[styles.oldestAuthor, themedStyles.oldestAuthor]} numberOfLines={1}>
-                {joinWithComma(stats.oldestTsundoku.authors)}
-              </Text>
-            </View>
-            <View style={[styles.oldestDays, themedStyles.oldestDays]}>
-              <Text style={[styles.oldestDaysValue, themedStyles.oldestDaysValue]}>
-                {getDaysSince(stats.oldestTsundoku.purchaseDate || stats.oldestTsundoku.createdAt)}
-              </Text>
-              <Text style={[styles.oldestDaysLabel, themedStyles.oldestDaysLabel]}>日</Text>
-            </View>
-          </TouchableOpacity>
+          <BookCard
+            book={oldestTsundoku}
+            onPress={() => handleBookPress(oldestTsundoku.id)}
+            size="large"
+          />
         </View>
       )}
 
@@ -253,6 +252,7 @@ export default function HomeScreen() {
               key={book.id}
               book={book}
               onPress={() => handleBookPress(book.id)}
+              size="large"
             />
           ))}
         </View>
@@ -279,11 +279,12 @@ interface StatCardProps {
   cardBgColor: string;
   textColor: string;
   labelColor: string;
+  cardWidth?: string;
 }
 
-function StatCard({ label, value, color, icon, cardBgColor, textColor, labelColor }: StatCardProps) {
+function StatCard({ label, value, color, icon, cardBgColor, textColor, labelColor, cardWidth }: StatCardProps) {
   return (
-    <View style={[styles.statCard, { borderLeftColor: color, backgroundColor: cardBgColor }]}>
+    <View style={[styles.statCard, { borderLeftColor: color, backgroundColor: cardBgColor, width: cardWidth as any }]}>
       <Text style={styles.statIcon}>{icon}</Text>
       <Text style={[styles.statValue, { color: textColor }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: labelColor }]}>{label}</Text>
@@ -296,30 +297,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: Math.round(16 * SCALE),
-    paddingBottom: Math.round(40 * SCALE),
+    padding: 16,
+    paddingBottom: DEVICE.isTablet ? 24 : 40,
   },
   header: {
-    marginBottom: Math.round(20 * SCALE),
+    marginBottom: DEVICE.isTablet ? 16 : 20,
+  },
+  tsundokuRow: {
+    flexDirection: DEVICE.isTablet ? 'row' : 'column',
+    gap: DEVICE.isTablet ? 12 : 0,
+    marginBottom: DEVICE.isTablet ? 12 : 0,
   },
   greeting: {
-    fontSize: Math.round(28 * SCALE),
+    fontSize: DEVICE.isTablet ? 34 : 28,
     fontWeight: 'bold',
   },
   total: {
-    fontSize: Math.round(14 * SCALE),
+    fontSize: 14,
     marginTop: 4,
   },
   quoteText: {
-    fontSize: Math.round(16 * SCALE),
+    fontSize: DEVICE.isTablet ? 20 : 16,
     fontStyle: 'italic',
-    marginTop: Math.round(12 * SCALE),
-    lineHeight: Math.round(24 * SCALE),
+    marginTop: 12,
+    lineHeight: DEVICE.isTablet ? 30 : 24,
   },
   tsundokuCard: {
-    borderRadius: Math.round(16 * SCALE),
-    padding: Math.round(20 * SCALE),
-    marginBottom: Math.round(16 * SCALE),
+    flex: DEVICE.isTablet ? 1 : undefined,
+    borderRadius: 12,
+    padding: DEVICE.isTablet ? 16 : 20,
+    marginBottom: DEVICE.isTablet ? 0 : 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -327,38 +334,42 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  priceCardInRow: {
+    borderWidth: 1,
+  },
   tsundokuHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Math.round(8 * SCALE),
+    marginBottom: DEVICE.isTablet ? 6 : 8,
   },
   tsundokuIcon: {
-    fontSize: Math.round(24 * SCALE),
-    marginRight: Math.round(8 * SCALE),
+    fontSize: DEVICE.isTablet ? 30 : 24,
+    marginRight: 8,
   },
   tsundokuLabel: {
-    fontSize: Math.round(14 * SCALE),
+    fontSize: DEVICE.isTablet ? 18 : 14,
     fontWeight: '600',
   },
   tsundokuValue: {
-    fontSize: Math.round(48 * SCALE),
+    fontSize: DEVICE.isTablet ? 52 : 48,
     fontWeight: 'bold',
   },
   tsundokuUnit: {
-    fontSize: Math.round(20 * SCALE),
+    fontSize: DEVICE.isTablet ? 22 : 20,
     fontWeight: 'normal',
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: Math.round(20 * SCALE),
+    gap: DEVICE.isTablet ? 8 : 0,
+    marginBottom: DEVICE.isTablet ? 12 : 20,
   },
   statCard: {
-    width: '48.5%',
-    marginBottom: Math.round(12 * SCALE),
-    borderRadius: Math.round(12 * SCALE),
-    padding: Math.round(16 * SCALE),
+    // 幅はcardWidth propで動的に設定
+    marginBottom: DEVICE.isTablet ? 10 : 12,
+    borderRadius: 12,
+    padding: DEVICE.isTablet ? 10 : 16,
     borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -367,77 +378,41 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   statIcon: {
-    fontSize: Math.round(24 * SCALE),
-    marginBottom: Math.round(8 * SCALE),
+    fontSize: DEVICE.isTablet ? 26 : 24,
+    marginBottom: DEVICE.isTablet ? 6 : 8,
   },
   statValue: {
-    fontSize: Math.round(32 * SCALE),
+    fontSize: DEVICE.isTablet ? 32 : 32,
     fontWeight: 'bold',
   },
   statLabel: {
-    fontSize: Math.round(14 * SCALE),
-    marginTop: 4,
+    fontSize: DEVICE.isTablet ? 15 : 14,
+    marginTop: 2,
   },
   priceCard: {
-    borderRadius: Math.round(12 * SCALE),
-    padding: Math.round(16 * SCALE),
-    marginBottom: Math.round(20 * SCALE),
+    borderRadius: 12,
+    padding: DEVICE.isTablet ? 14 : 16,
+    marginBottom: DEVICE.isTablet ? 12 : 20,
     borderWidth: 1,
   },
   priceLabel: {
-    fontSize: Math.round(14 * SCALE),
+    fontSize: DEVICE.isTablet ? 18 : 14,
   },
   priceValue: {
-    fontSize: Math.round(28 * SCALE),
+    fontSize: DEVICE.isTablet ? 34 : 28,
     fontWeight: 'bold',
     marginTop: 4,
   },
   priceHint: {
-    fontSize: Math.round(12 * SCALE),
+    fontSize: DEVICE.isTablet ? 15 : 12,
     marginTop: 4,
   },
   section: {
-    marginBottom: Math.round(20 * SCALE),
+    marginBottom: DEVICE.isTablet ? 14 : 20,
   },
   sectionTitle: {
-    fontSize: Math.round(18 * SCALE),
+    fontSize: DEVICE.isTablet ? 22 : 18,
     fontWeight: 'bold',
-    marginBottom: Math.round(12 * SCALE),
-  },
-  oldestCard: {
-    flexDirection: 'row',
-    borderRadius: Math.round(12 * SCALE),
-    padding: Math.round(16 * SCALE),
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  oldestInfo: {
-    flex: 1,
-  },
-  oldestTitle: {
-    fontSize: Math.round(16 * SCALE),
-    fontWeight: '600',
-  },
-  oldestAuthor: {
-    fontSize: Math.round(14 * SCALE),
-    marginTop: 2,
-  },
-  oldestDays: {
-    alignItems: 'center',
-    marginLeft: Math.round(16 * SCALE),
-    paddingHorizontal: Math.round(16 * SCALE),
-    paddingVertical: Math.round(8 * SCALE),
-    borderRadius: Math.round(8 * SCALE),
-  },
-  oldestDaysValue: {
-    fontSize: Math.round(24 * SCALE),
-    fontWeight: 'bold',
-  },
-  oldestDaysLabel: {
-    fontSize: Math.round(12 * SCALE),
+    marginBottom: DEVICE.isTablet ? 14 : 12,
   },
 });

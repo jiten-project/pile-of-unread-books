@@ -9,6 +9,9 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "cache": {
+        "key": "dev-v1"
       }
     },
     "development:device": {
@@ -16,17 +19,30 @@
       "distribution": "internal",
       "ios": {
         "simulator": false
+      },
+      "cache": {
+        "key": "dev-device-v1"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "cache": {
+        "key": "preview-v1"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "credentialsSource": "remote"
+      "credentialsSource": "remote",
+      "cache": {
+        "key": "prod-v1"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "language": "ja-JP"
+      }
+    }
   }
 }
