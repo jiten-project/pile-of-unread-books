@@ -19,6 +19,10 @@ import { insertBooksInTransaction, getAllBooks, deleteAllBooks } from '../servic
 import { deleteAllBooksFromCloud } from '../services/cloudDatabase';
 import { AppNavigationProp } from '../types';
 import { useTheme, ThemeMode, useSettings, TSUNDOKU_PRESETS, TsundokuPresetKey, useAuth, useSyncContext } from '../contexts';
+import { DEVICE } from '../constants';
+import { logError } from '../utils/logger';
+
+const isTablet = DEVICE.isTablet;
 
 const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
   { value: 'system', label: 'システム設定', icon: '📱' },
@@ -44,7 +48,7 @@ export default function SettingsScreen() {
       Alert.alert('同期完了', 'データの同期が完了しました');
     } catch (error) {
       Alert.alert('同期エラー', '同期に失敗しました。後でもう一度お試しください。');
-      console.error('Manual sync error:', error);
+      logError('settings:manualSync', error);
     } finally {
       setIsManualSyncing(false);
     }
@@ -73,7 +77,7 @@ export default function SettingsScreen() {
       await signInWithApple();
     } catch (error) {
       Alert.alert('サインインエラー', 'サインインに失敗しました。もう一度お試しください。');
-      console.error('Sign in error:', error);
+      logError('settings:signIn', error);
     } finally {
       setIsSigningIn(false);
     }
@@ -94,7 +98,7 @@ export default function SettingsScreen() {
               await signOut();
             } catch (error) {
               Alert.alert('エラー', 'サインアウトに失敗しました');
-              console.error('Sign out error:', error);
+              logError('settings:signOut', error);
             } finally {
               setIsSigningOut(false);
             }
@@ -141,7 +145,7 @@ export default function SettingsScreen() {
       await exportBooks(books);
     } catch (error) {
       Alert.alert('エラー', 'データのエクスポートに失敗しました');
-      console.error(error);
+      logError('settings:export', error);
     } finally {
       setIsExporting(false);
     }
@@ -191,7 +195,7 @@ export default function SettingsScreen() {
               );
             } catch (error) {
               Alert.alert('エラー', 'データのインポートに失敗しました');
-              console.error(error);
+              logError('settings:import', error);
             } finally {
               setIsImporting(false);
             }
@@ -215,7 +219,7 @@ export default function SettingsScreen() {
         Alert.alert('完了', 'ローカルデータを削除しました');
       } catch (error) {
         Alert.alert('エラー', 'データの削除に失敗しました');
-        console.error(error);
+        logError('settings:deleteLocal', error);
       }
     };
 
@@ -225,7 +229,7 @@ export default function SettingsScreen() {
         Alert.alert('完了', 'クラウドデータを削除しました');
       } catch (error) {
         Alert.alert('エラー', 'クラウドデータの削除に失敗しました');
-        console.error(error);
+        logError('settings:deleteCloud', error);
       }
     };
 
@@ -238,7 +242,7 @@ export default function SettingsScreen() {
         Alert.alert('完了', 'ローカルとクラウドのデータをすべて削除しました');
       } catch (error) {
         Alert.alert('エラー', 'データの削除に失敗しました。再度お試しください。');
-        console.error(error);
+        logError('settings:deleteAll', error);
       }
     };
 
@@ -299,7 +303,7 @@ export default function SettingsScreen() {
                           await signOut();
                         } catch (error) {
                           Alert.alert('エラー', 'サインアウトに失敗しました');
-                          console.error('Sign out failed:', error);
+                          logError('settings:signOutFailed', error);
                         }
                       },
                     },
@@ -363,20 +367,232 @@ export default function SettingsScreen() {
     themeInactiveText: { color: colors.textSecondary },
   };
 
+  // iPad用の拡大スタイル
+  const tabletStyles = isTablet ? {
+    content: { padding: 32, paddingBottom: 80 },
+    section: { borderRadius: 20, marginBottom: 32 },
+    sectionTitle: { fontSize: 26, paddingHorizontal: 28, paddingTop: 28, paddingBottom: 16 },
+    sectionDescription: { fontSize: 20, paddingHorizontal: 28, paddingBottom: 20 },
+    themeSelector: { padding: 28, gap: 20 },
+    themeOption: { paddingVertical: 28, minHeight: 120, borderRadius: 20 },
+    themeIcon: { fontSize: 48, marginBottom: 16 },
+    themeLabel: { fontSize: 20 },
+    presetSelector: { paddingHorizontal: 28, paddingBottom: 28, gap: 18 },
+    presetOption: { paddingVertical: 24, paddingHorizontal: 28, borderRadius: 20, minHeight: 88 },
+    presetName: { fontSize: 22, marginBottom: 8 },
+    presetDescription: { fontSize: 18 },
+    currentDefinition: { marginHorizontal: 28, marginBottom: 28, padding: 24, borderRadius: 16 },
+    currentDefinitionTitle: { fontSize: 18, marginBottom: 14 },
+    statusIncluded: { fontSize: 20 },
+    statusExcluded: { fontSize: 20 },
+    statusList: { gap: 20 },
+    switchRow: { paddingHorizontal: 28, paddingVertical: 24 },
+    switchLabel: { fontSize: 22 },
+    switchDescription: { fontSize: 18, marginTop: 8 },
+    menuItem: { padding: 28, minHeight: 88 },
+    menuIcon: { width: 60, height: 60, borderRadius: 16, marginRight: 20 },
+    menuIconText: { fontSize: 34 },
+    menuLabel: { fontSize: 22 },
+    menuDescription: { fontSize: 18, marginTop: 8 },
+    menuArrow: { fontSize: 34 },
+    infoRow: { padding: 28 },
+    infoLabel: { fontSize: 22 },
+    infoValue: { fontSize: 22 },
+    footer: { fontSize: 18, marginTop: 40 },
+    cloudSyncContent: { padding: 28 },
+    cloudSyncDescription: { fontSize: 20, lineHeight: 32, marginBottom: 24 },
+    cloudSyncFeature: { fontSize: 19, lineHeight: 34 },
+    cloudSyncFeatures: { marginBottom: 28 },
+    appleButton: { width: 360, height: 60 },
+    appleButtonLoading: { width: 360, height: 60 },
+    cloudSyncNote: { fontSize: 18 },
+    syncStatus: { padding: 24, borderRadius: 16, marginBottom: 24 },
+    syncStatusIcon: { fontSize: 34, marginRight: 20 },
+    syncStatusTitle: { fontSize: 22 },
+    syncStatusEmail: { fontSize: 19, marginTop: 8 },
+    syncInfoRow: { paddingVertical: 20, marginBottom: 20 },
+    syncInfoLabel: { fontSize: 20 },
+    syncInfoValue: { fontSize: 20 },
+    syncButton: { paddingVertical: 20, borderRadius: 16 },
+    syncButtonText: { fontSize: 22 },
+    signOutButton: { paddingVertical: 20, borderRadius: 16, marginTop: 16 },
+    signOutButtonText: { fontSize: 22 },
+    syncLimitWarning: { padding: 24, borderRadius: 16, marginBottom: 24 },
+    syncLimitWarningText: { fontSize: 19, lineHeight: 30 },
+  } : {};
+
   return (
     <ScrollView
       style={[styles.container, themedStyles.container]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, tabletStyles.content]}
     >
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>外観</Text>
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>積読の定義</Text>
+        <Text style={[styles.sectionDescription, tabletStyles.sectionDescription, { color: colors.textTertiary }]}>
+          あなたにとっての「積読」とは？
+        </Text>
 
-        <View style={styles.themeSelector}>
+        <View style={[styles.presetSelector, tabletStyles.presetSelector]}>
+          {(Object.entries(TSUNDOKU_PRESETS) as [TsundokuPresetKey, typeof TSUNDOKU_PRESETS[TsundokuPresetKey]][]).map(
+            ([key, preset]) => (
+              <TouchableOpacity
+                key={key}
+                style={[
+                  styles.presetOption,
+                  tabletStyles.presetOption,
+                  currentPreset === key
+                    ? themedStyles.themeActive
+                    : themedStyles.themeInactive,
+                ]}
+                onPress={() => handlePresetSelect(key)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.presetName,
+                    tabletStyles.presetName,
+                    currentPreset === key
+                      ? themedStyles.themeActiveText
+                      : { color: colors.textPrimary },
+                  ]}
+                >
+                  {preset.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.presetDescription,
+                    tabletStyles.presetDescription,
+                    currentPreset === key
+                      ? { color: colors.primary }
+                      : { color: colors.textTertiary },
+                  ]}
+                >
+                  {preset.description}
+                </Text>
+              </TouchableOpacity>
+            )
+          )}
+        </View>
+
+        <View style={[styles.currentDefinition, tabletStyles.currentDefinition, { backgroundColor: colors.background }]}>
+          <Text style={[styles.currentDefinitionTitle, tabletStyles.currentDefinitionTitle, { color: colors.textSecondary }]}>
+            現在の設定:
+          </Text>
+          <View style={[styles.statusList, tabletStyles.statusList]}>
+            <View style={styles.statusItem}>
+              <Text style={tsundokuDefinition.includeUnread ? [styles.statusIncluded, tabletStyles.statusIncluded] : [styles.statusExcluded, tabletStyles.statusExcluded, { color: colors.textTertiary }]}>
+                {tsundokuDefinition.includeUnread ? '✓' : '−'} 未読
+              </Text>
+            </View>
+            <View style={styles.statusItem}>
+              <Text style={tsundokuDefinition.includeReading ? [styles.statusIncluded, tabletStyles.statusIncluded] : [styles.statusExcluded, tabletStyles.statusExcluded, { color: colors.textTertiary }]}>
+                {tsundokuDefinition.includeReading ? '✓' : '−'} 読書中
+              </Text>
+            </View>
+            <View style={styles.statusItem}>
+              <Text style={tsundokuDefinition.includePaused ? [styles.statusIncluded, tabletStyles.statusIncluded] : [styles.statusExcluded, tabletStyles.statusExcluded, { color: colors.textTertiary }]}>
+                {tsundokuDefinition.includePaused ? '✓' : '−'} 中断
+              </Text>
+            </View>
+            <View style={styles.statusItem}>
+              <Text style={[styles.statusExcluded, tabletStyles.statusExcluded, { color: colors.textTertiary }]}>
+                − 読了
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>本棚の表示</Text>
+        <View style={[styles.switchRow, tabletStyles.switchRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={[styles.switchLabel, tabletStyles.switchLabel, { color: colors.textPrimary }]}>
+              ほしい本を表示
+            </Text>
+            <Text style={[styles.switchDescription, tabletStyles.switchDescription, { color: colors.textTertiary }]}>
+              「ほしい」ステータスの本を本棚に表示
+            </Text>
+          </View>
+          <Switch
+            value={showWishlistInBookshelf}
+            onValueChange={handleWishlistToggle}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={showWishlistInBookshelf ? '#fff' : '#f4f3f4'}
+            style={isTablet ? { transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] } : undefined}
+          />
+        </View>
+        <View style={[styles.switchRow, tabletStyles.switchRow, { borderBottomColor: colors.border }]}>
+          <View style={styles.switchLabelContainer}>
+            <Text style={[styles.switchLabel, tabletStyles.switchLabel, { color: colors.textPrimary }]}>
+              解放した本を表示
+            </Text>
+            <Text style={[styles.switchDescription, tabletStyles.switchDescription, { color: colors.textTertiary }]}>
+              「解放」ステータスの本を本棚に表示
+            </Text>
+          </View>
+          <Switch
+            value={showReleasedInBookshelf}
+            onValueChange={handleReleasedToggle}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={showReleasedInBookshelf ? '#fff' : '#f4f3f4'}
+            style={isTablet ? { transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] } : undefined}
+          />
+        </View>
+      </View>
+
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>通知</Text>
+
+        <TouchableOpacity
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
+          onPress={() => navigation.navigate('NotificationSettings')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>🔔</Text>
+          </View>
+          <View style={styles.menuContent}>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>通知設定</Text>
+            <Text style={[styles.menuDescription, tabletStyles.menuDescription, themedStyles.menuDescription]}>
+              読書リマインダーの設定
+            </Text>
+          </View>
+          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>コンテンツ管理</Text>
+
+        <TouchableOpacity
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
+          onPress={() => navigation.navigate('TagManagement')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>🏷️</Text>
+          </View>
+          <View style={styles.menuContent}>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>タグ管理</Text>
+            <Text style={[styles.menuDescription, tabletStyles.menuDescription, themedStyles.menuDescription]}>
+              タグの編集・削除
+            </Text>
+          </View>
+          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>外観</Text>
+
+        <View style={[styles.themeSelector, tabletStyles.themeSelector]}>
           {THEME_OPTIONS.map(option => (
             <TouchableOpacity
               key={option.value}
               style={[
                 styles.themeOption,
+                tabletStyles.themeOption,
                 themeMode === option.value
                   ? themedStyles.themeActive
                   : themedStyles.themeInactive,
@@ -384,10 +600,11 @@ export default function SettingsScreen() {
               onPress={() => setThemeMode(option.value)}
               activeOpacity={0.7}
             >
-              <Text style={styles.themeIcon}>{option.icon}</Text>
+              <Text style={[styles.themeIcon, tabletStyles.themeIcon]}>{option.icon}</Text>
               <Text
                 style={[
                   styles.themeLabel,
+                  tabletStyles.themeLabel,
                   themeMode === option.value
                     ? themedStyles.themeActiveText
                     : themedStyles.themeInactiveText,
@@ -401,41 +618,41 @@ export default function SettingsScreen() {
       </View>
 
       {Platform.OS === 'ios' && (
-        <View style={[styles.section, themedStyles.section]}>
-          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>クラウド同期</Text>
+        <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>クラウド同期</Text>
 
           {isAuthLoading ? (
             <View style={styles.cloudSyncLoading}>
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size={isTablet ? 'large' : 'small'} color={colors.primary} />
             </View>
           ) : user ? (
-            <View style={styles.cloudSyncContent}>
-              <View style={[styles.syncStatus, { backgroundColor: colors.success + '20' }]}>
-                <Text style={[styles.syncStatusIcon]}>✓</Text>
+            <View style={[styles.cloudSyncContent, tabletStyles.cloudSyncContent]}>
+              <View style={[styles.syncStatus, tabletStyles.syncStatus, { backgroundColor: colors.success + '20' }]}>
+                <Text style={[styles.syncStatusIcon, tabletStyles.syncStatusIcon]}>✓</Text>
                 <View style={styles.syncStatusText}>
-                  <Text style={[styles.syncStatusTitle, { color: colors.success }]}>
+                  <Text style={[styles.syncStatusTitle, tabletStyles.syncStatusTitle, { color: colors.success }]}>
                     同期が有効です
                   </Text>
-                  <Text style={[styles.syncStatusEmail, { color: colors.textSecondary }]}>
+                  <Text style={[styles.syncStatusEmail, tabletStyles.syncStatusEmail, { color: colors.textSecondary }]}>
                     {user.email || 'Apple ID'}
                   </Text>
                 </View>
               </View>
 
-              <View style={[styles.syncInfoRow, { borderColor: colors.borderLight }]}>
-                <Text style={[styles.syncInfoLabel, { color: colors.textSecondary }]}>
+              <View style={[styles.syncInfoRow, tabletStyles.syncInfoRow, { borderColor: colors.borderLight }]}>
+                <Text style={[styles.syncInfoLabel, tabletStyles.syncInfoLabel, { color: colors.textSecondary }]}>
                   最終同期
                 </Text>
-                <Text style={[styles.syncInfoValue, { color: colors.textPrimary }]}>
+                <Text style={[styles.syncInfoValue, tabletStyles.syncInfoValue, { color: colors.textPrimary }]}>
                   {syncState === 'syncing' ? '同期中...' : formatLastSyncTime(lastSyncTime)}
                 </Text>
               </View>
 
-              <View style={[styles.syncInfoRow, { borderColor: colors.borderLight }]}>
-                <Text style={[styles.syncInfoLabel, { color: colors.textSecondary }]}>
+              <View style={[styles.syncInfoRow, tabletStyles.syncInfoRow, { borderColor: colors.borderLight }]}>
+                <Text style={[styles.syncInfoLabel, tabletStyles.syncInfoLabel, { color: colors.textSecondary }]}>
                   クラウド同期
                 </Text>
-                <Text style={[styles.syncInfoValue, { color: colors.textPrimary }]}>
+                <Text style={[styles.syncInfoValue, tabletStyles.syncInfoValue, { color: colors.textPrimary }]}>
                   {isPremium ? (
                     `${cloudSyncCount}冊（無制限）`
                   ) : (
@@ -445,15 +662,15 @@ export default function SettingsScreen() {
               </View>
 
               {!isPremium && cloudSyncCount >= cloudSyncLimit && (
-                <View style={[styles.syncLimitWarning, { backgroundColor: colors.warning + '20' }]}>
-                  <Text style={[styles.syncLimitWarningText, { color: colors.warning }]}>
+                <View style={[styles.syncLimitWarning, tabletStyles.syncLimitWarning, { backgroundColor: colors.warning + '20' }]}>
+                  <Text style={[styles.syncLimitWarningText, tabletStyles.syncLimitWarningText, { color: colors.warning }]}>
                     クラウド同期の上限に達しました。新しい本はローカルのみに保存されます。
                   </Text>
                 </View>
               )}
 
               <TouchableOpacity
-                style={[styles.syncButton, { backgroundColor: colors.primary }]}
+                style={[styles.syncButton, tabletStyles.syncButton, { backgroundColor: colors.primary }]}
                 onPress={handleManualSync}
                 disabled={isManualSyncing || syncState === 'syncing'}
                 activeOpacity={0.7}
@@ -461,12 +678,12 @@ export default function SettingsScreen() {
                 {isManualSyncing || syncState === 'syncing' ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.syncButtonText}>今すぐ同期</Text>
+                  <Text style={[styles.syncButtonText, tabletStyles.syncButtonText]}>今すぐ同期</Text>
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.signOutButton, { borderColor: colors.border }]}
+                style={[styles.signOutButton, tabletStyles.signOutButton, { borderColor: colors.border }]}
                 onPress={handleSignOut}
                 disabled={isSigningOut}
                 activeOpacity={0.7}
@@ -474,26 +691,26 @@ export default function SettingsScreen() {
                 {isSigningOut ? (
                   <ActivityIndicator size="small" color={colors.error} />
                 ) : (
-                  <Text style={[styles.signOutButtonText, { color: colors.error }]}>
+                  <Text style={[styles.signOutButtonText, tabletStyles.signOutButtonText, { color: colors.error }]}>
                     サインアウト
                   </Text>
                 )}
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.cloudSyncContent}>
-              <Text style={[styles.cloudSyncDescription, { color: colors.textSecondary }]}>
+            <View style={[styles.cloudSyncContent, tabletStyles.cloudSyncContent]}>
+              <Text style={[styles.cloudSyncDescription, tabletStyles.cloudSyncDescription, { color: colors.textSecondary }]}>
                 Appleでサインインすると、複数のデバイス間でデータを同期できます。
               </Text>
 
-              <View style={styles.cloudSyncFeatures}>
-                <Text style={[styles.cloudSyncFeature, { color: colors.textTertiary }]}>
+              <View style={[styles.cloudSyncFeatures, tabletStyles.cloudSyncFeatures]}>
+                <Text style={[styles.cloudSyncFeature, tabletStyles.cloudSyncFeature, { color: colors.textTertiary }]}>
                   ・iPhone/iPad間でデータを同期
                 </Text>
-                <Text style={[styles.cloudSyncFeature, { color: colors.textTertiary }]}>
+                <Text style={[styles.cloudSyncFeature, tabletStyles.cloudSyncFeature, { color: colors.textTertiary }]}>
                   ・デバイス紛失時のバックアップ
                 </Text>
-                <Text style={[styles.cloudSyncFeature, { color: colors.textTertiary }]}>
+                <Text style={[styles.cloudSyncFeature, tabletStyles.cloudSyncFeature, { color: colors.textTertiary }]}>
                   ・機種変更時も簡単にデータ移行
                 </Text>
               </View>
@@ -501,15 +718,15 @@ export default function SettingsScreen() {
               {isAppleAuthAvailable ? (
                 <View style={styles.appleButtonContainer}>
                   {isSigningIn ? (
-                    <View style={[styles.appleButtonLoading, { backgroundColor: colors.textPrimary }]}>
+                    <View style={[styles.appleButtonLoading, tabletStyles.appleButtonLoading, { backgroundColor: colors.textPrimary }]}>
                       <ActivityIndicator size="small" color="#fff" />
                     </View>
                   ) : (
                     <AppleAuthentication.AppleAuthenticationButton
                       buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
                       buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                      cornerRadius={8}
-                      style={styles.appleButton}
+                      cornerRadius={isTablet ? 12 : 8}
+                      style={[styles.appleButton, tabletStyles.appleButton]}
                       onPress={handleSignIn}
                     />
                   )}
@@ -520,7 +737,7 @@ export default function SettingsScreen() {
                 </Text>
               )}
 
-              <Text style={[styles.cloudSyncNote, { color: colors.textTertiary }]}>
+              <Text style={[styles.cloudSyncNote, tabletStyles.cloudSyncNote, { color: colors.textTertiary }]}>
                 ※ サインインしなくてもアプリは使えます
               </Text>
             </View>
@@ -528,294 +745,142 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>積読の定義</Text>
-        <Text style={[styles.sectionDescription, { color: colors.textTertiary }]}>
-          あなたにとっての「積読」とは？
-        </Text>
-
-        <View style={styles.presetSelector}>
-          {(Object.entries(TSUNDOKU_PRESETS) as [TsundokuPresetKey, typeof TSUNDOKU_PRESETS[TsundokuPresetKey]][]).map(
-            ([key, preset]) => (
-              <TouchableOpacity
-                key={key}
-                style={[
-                  styles.presetOption,
-                  currentPreset === key
-                    ? themedStyles.themeActive
-                    : themedStyles.themeInactive,
-                ]}
-                onPress={() => handlePresetSelect(key)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.presetName,
-                    currentPreset === key
-                      ? themedStyles.themeActiveText
-                      : { color: colors.textPrimary },
-                  ]}
-                >
-                  {preset.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.presetDescription,
-                    currentPreset === key
-                      ? { color: colors.primary }
-                      : { color: colors.textTertiary },
-                  ]}
-                >
-                  {preset.description}
-                </Text>
-              </TouchableOpacity>
-            )
-          )}
-        </View>
-
-        <View style={[styles.currentDefinition, { backgroundColor: colors.background }]}>
-          <Text style={[styles.currentDefinitionTitle, { color: colors.textSecondary }]}>
-            現在の設定:
-          </Text>
-          <View style={styles.statusList}>
-            <View style={styles.statusItem}>
-              <Text style={tsundokuDefinition.includeUnread ? styles.statusIncluded : [styles.statusExcluded, { color: colors.textTertiary }]}>
-                {tsundokuDefinition.includeUnread ? '✓' : '−'} 未読
-              </Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={tsundokuDefinition.includeReading ? styles.statusIncluded : [styles.statusExcluded, { color: colors.textTertiary }]}>
-                {tsundokuDefinition.includeReading ? '✓' : '−'} 読書中
-              </Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={tsundokuDefinition.includePaused ? styles.statusIncluded : [styles.statusExcluded, { color: colors.textTertiary }]}>
-                {tsundokuDefinition.includePaused ? '✓' : '−'} 中断
-              </Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={[styles.statusExcluded, { color: colors.textTertiary }]}>
-                − 読了
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>本棚の表示</Text>
-        <View style={[styles.switchRow, { borderBottomColor: colors.border }]}>
-          <View style={styles.switchLabelContainer}>
-            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
-              ほしい本を表示
-            </Text>
-            <Text style={[styles.switchDescription, { color: colors.textTertiary }]}>
-              「ほしい」ステータスの本を本棚に表示
-            </Text>
-          </View>
-          <Switch
-            value={showWishlistInBookshelf}
-            onValueChange={handleWishlistToggle}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={showWishlistInBookshelf ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-        <View style={[styles.switchRow, { borderBottomColor: colors.border }]}>
-          <View style={styles.switchLabelContainer}>
-            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
-              解放した本を表示
-            </Text>
-            <Text style={[styles.switchDescription, { color: colors.textTertiary }]}>
-              「解放」ステータスの本を本棚に表示
-            </Text>
-          </View>
-          <Switch
-            value={showReleasedInBookshelf}
-            onValueChange={handleReleasedToggle}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={showReleasedInBookshelf ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-      </View>
-
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>通知</Text>
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>データ管理</Text>
 
         <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
-          onPress={() => navigation.navigate('NotificationSettings')}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>🔔</Text>
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>通知設定</Text>
-            <Text style={[styles.menuDescription, themedStyles.menuDescription]}>
-              読書リマインダーの設定
-            </Text>
-          </View>
-          <Text style={[styles.menuArrow, themedStyles.menuArrow]}>›</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>コンテンツ管理</Text>
-
-        <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
-          onPress={() => navigation.navigate('TagManagement')}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>🏷️</Text>
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>タグ管理</Text>
-            <Text style={[styles.menuDescription, themedStyles.menuDescription]}>
-              タグの編集・削除
-            </Text>
-          </View>
-          <Text style={[styles.menuArrow, themedStyles.menuArrow]}>›</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>データ管理</Text>
-
-        <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
           onPress={handleExport}
           disabled={isExporting}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>📤</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>📤</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>
               {isExporting ? 'エクスポート中...' : 'データをエクスポート'}
             </Text>
-            <Text style={[styles.menuDescription, themedStyles.menuDescription]}>
+            <Text style={[styles.menuDescription, tabletStyles.menuDescription, themedStyles.menuDescription]}>
               JSONファイルとして保存・共有
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
           onPress={handleImport}
           disabled={isImporting}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>📥</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>📥</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>
               {isImporting ? 'インポート中...' : 'データをインポート'}
             </Text>
-            <Text style={[styles.menuDescription, themedStyles.menuDescription]}>
+            <Text style={[styles.menuDescription, tabletStyles.menuDescription, themedStyles.menuDescription]}>
               JSONファイルから復元
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
           onPress={handleDeleteAll}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>🗑️</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>🗑️</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, { color: colors.error }]}>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, { color: colors.error }]}>
               すべてのデータを削除
             </Text>
-            <Text style={[styles.menuDescription, themedStyles.menuDescription]}>
+            <Text style={[styles.menuDescription, tabletStyles.menuDescription, themedStyles.menuDescription]}>
               登録した本をすべて削除します
             </Text>
           </View>
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>アプリ情報</Text>
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>アプリ情報</Text>
 
-        <View style={[styles.infoRow, themedStyles.menuBorder]}>
-          <Text style={[styles.infoLabel, themedStyles.infoLabel]}>バージョン</Text>
-          <Text style={[styles.infoValue, themedStyles.infoValue]}>1.1.0</Text>
+        <View style={[styles.infoRow, tabletStyles.infoRow, themedStyles.menuBorder]}>
+          <Text style={[styles.infoLabel, tabletStyles.infoLabel, themedStyles.infoLabel]}>バージョン</Text>
+          <Text style={[styles.infoValue, tabletStyles.infoValue, themedStyles.infoValue]}>1.3.0</Text>
         </View>
 
-        <View style={[styles.infoRow, themedStyles.menuBorder]}>
-          <Text style={[styles.infoLabel, themedStyles.infoLabel]}>登録冊数</Text>
-          <Text style={[styles.infoValue, themedStyles.infoValue]}>{books.length}冊</Text>
+        <View style={[styles.infoRow, tabletStyles.infoRow, themedStyles.menuBorder]}>
+          <Text style={[styles.infoLabel, tabletStyles.infoLabel, themedStyles.infoLabel]}>登録冊数</Text>
+          <Text style={[styles.infoValue, tabletStyles.infoValue, themedStyles.infoValue]}>{books.length}冊</Text>
         </View>
       </View>
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>法的情報</Text>
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>法的情報</Text>
 
         <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
           onPress={() => navigation.navigate('TermsOfService')}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>📋</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>📋</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>利用規約</Text>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>利用規約</Text>
           </View>
-          <Text style={[styles.menuArrow, themedStyles.menuArrow]}>›</Text>
+          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
           onPress={() => navigation.navigate('PrivacyPolicy')}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>🔒</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>🔒</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>プライバシーポリシー</Text>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>プライバシーポリシー</Text>
           </View>
-          <Text style={[styles.menuArrow, themedStyles.menuArrow]}>›</Text>
+          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.menuItem, themedStyles.menuBorder]}
+          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
           onPress={() => navigation.navigate('Licenses')}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>📜</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>📜</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>オープンソースライセンス</Text>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>オープンソースライセンス</Text>
           </View>
-          <Text style={[styles.menuArrow, themedStyles.menuArrow]}>›</Text>
+          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.menuItem}
+          style={[styles.menuItem, tabletStyles.menuItem]}
           onPress={() => navigation.navigate('Disclaimer')}
           activeOpacity={0.7}
         >
-          <View style={[styles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={styles.menuIconText}>⚠️</Text>
+          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
+            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>⚠️</Text>
           </View>
           <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, themedStyles.menuLabel]}>免責事項</Text>
+            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>免責事項</Text>
           </View>
-          <Text style={[styles.menuArrow, themedStyles.menuArrow]}>›</Text>
+          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={[styles.footer, themedStyles.footer]}>
-        積読本管理 v1.1.0
+      <Text style={[styles.footer, tabletStyles.footer, themedStyles.footer]}>
+        積読本管理 v1.3.0
       </Text>
     </ScrollView>
   );

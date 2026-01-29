@@ -6,6 +6,7 @@ import {
   getChangelogForVersion,
   compareVersions,
 } from '../constants/changelog';
+import { logError } from '../utils/logger';
 
 const LAST_SHOWN_VERSION_KEY = '@whatsNew_lastShownVersion';
 
@@ -68,7 +69,7 @@ export const useWhatsNew = (): UseWhatsNewReturn => {
 
         setIsReady(true);
       } catch (error) {
-        console.error('Error checking version for WhatsNew:', error);
+        logError('whatsNew:checkVersion', error);
         setIsReady(true);
       }
     };
@@ -82,7 +83,7 @@ export const useWhatsNew = (): UseWhatsNewReturn => {
       setShouldShowModal(false);
       setChangelog(null);
     } catch (error) {
-      console.error('Error marking WhatsNew as shown:', error);
+      logError('whatsNew:markAsShown', error);
     }
   }, [currentVersion]);
 

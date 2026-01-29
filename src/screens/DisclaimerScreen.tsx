@@ -11,7 +11,7 @@ export default function DisclaimerScreen() {
     >
       <Text style={[styles.title, { color: colors.textPrimary }]}>免責事項</Text>
       <Text style={[styles.lastUpdated, { color: colors.textTertiary }]}>
-        最終更新日: 2026年1月27日
+        最終更新日: 2026年1月29日
       </Text>
 
       <View style={styles.section}>
@@ -50,7 +50,13 @@ export default function DisclaimerScreen() {
           3. 書籍情報の正確性
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリはOpenBD APIおよびGoogle Books APIを通じて書籍情報を取得する場合があります。取得された情報の正確性、完全性、最新性について、開発者は保証しません。書籍情報に誤りがある場合は、ユーザー自身で修正してください。
+          本アプリはOpenBD APIおよびGoogle Books APIを通じて書籍情報を取得する場合があります。取得された情報の正確性、完全性、最新性について、開発者は保証しません。{'\n\n'}
+          【自動取得される情報の制限】{'\n'}
+          以下の情報は、API提供元のデータに依存するため、実際の書籍と異なる場合があります。{'\n'}
+          • ページ数：データがない、または実際と異なる数値が表示される場合があります{'\n'}
+          • 定価：改定前の旧価格が表示される、またはデータがない場合があります{'\n'}
+          • その他の書籍情報（発売日、出版社、説明文等）{'\n\n'}
+          書籍情報に誤りがある場合は、登録後にユーザー自身で編集・修正してください。
         </Text>
       </View>
 

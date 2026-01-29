@@ -2,8 +2,7 @@ import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { RootNavigator } from './src/navigation';
-import { useDatabase } from './src/hooks';
-import { useWhatsNew } from './src/hooks/useWhatsNew';
+import { useDatabase, useAppUpdate, useWhatsNew } from './src/hooks';
 import { ThemeProvider, SettingsProvider, AuthProvider, SyncProvider, useTheme } from './src/contexts';
 import { WhatsNewModal } from './src/components/WhatsNewModal';
 
@@ -11,6 +10,9 @@ function AppContent() {
   const { isReady } = useDatabase();
   const { colors, isDark } = useTheme();
   const { shouldShowModal, changelog, markAsShown } = useWhatsNew();
+
+  // App Storeのアップデートチェック（バックグラウンドで実行）
+  useAppUpdate();
 
   if (!isReady) {
     return (
@@ -20,8 +22,9 @@ function AppContent() {
     );
   }
 
+  // データベース初期化完了後にSyncProviderをマウント
   return (
-    <>
+    <SyncProvider>
       <RootNavigator />
       {changelog && (
         <WhatsNewModal
@@ -30,7 +33,7 @@ function AppContent() {
           onClose={markAsShown}
         />
       )}
-    </>
+    </SyncProvider>
   );
 }
 
@@ -74,9 +77,7 @@ export default function App() {
     <ThemeProvider>
       <SettingsProvider>
         <AuthProvider>
-          <SyncProvider>
-            <ThemedApp />
-          </SyncProvider>
+          <ThemedApp />
         </AuthProvider>
       </SettingsProvider>
     </ThemeProvider>

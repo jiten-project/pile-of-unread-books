@@ -35,16 +35,19 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
 
   // サイズに応じたスタイル（iPadのlargeサイズ用）
   const sizeStyles = isLarge ? {
-    container: { padding: 20 },
-    imageContainer: { width: 140, height: 210 },
-    title: { fontSize: 24, marginBottom: 8 },
-    authors: { fontSize: 18, marginBottom: 12 },
-    badge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 },
-    badgeText: { fontSize: 14 },
-    tag: { paddingHorizontal: 10, paddingVertical: 4 },
-    tagText: { fontSize: 14 },
-    purchaseReason: { fontSize: 16, lineHeight: 22, marginTop: 10 },
-    placeholderText: { fontSize: 14 },
+    container: { padding: 24, marginBottom: 16 },
+    imageContainer: { width: 160, height: 240 },
+    content: { marginLeft: 20 },
+    title: { fontSize: 26, marginBottom: 10, lineHeight: 34 },
+    authors: { fontSize: 20, marginBottom: 14 },
+    badges: { gap: 10, marginBottom: 12 },
+    badge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 },
+    badgeText: { fontSize: 16 },
+    tags: { gap: 8 },
+    tag: { paddingHorizontal: 12, paddingVertical: 5 },
+    tagText: { fontSize: 16 },
+    purchaseReason: { fontSize: 18, lineHeight: 26, marginTop: 12 },
+    placeholderText: { fontSize: 16 },
   } : {};
 
   return (
@@ -63,7 +66,7 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
         )}
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, sizeStyles.content]}>
         <Text style={[styles.title, themedStyles.title, sizeStyles.title]} numberOfLines={2}>
           {book.title}
         </Text>
@@ -71,7 +74,7 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
           {book.authors.join(', ')}
         </Text>
 
-        <View style={styles.badges}>
+        <View style={[styles.badges, sizeStyles.badges]}>
           <View style={[styles.badge, { backgroundColor: STATUS_COLORS[book.status] }, sizeStyles.badge]}>
             <Text style={[styles.badgeText, sizeStyles.badgeText]}>{STATUS_LABELS[book.status]}</Text>
           </View>
@@ -86,7 +89,7 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
         </View>
 
         {book.tags.length > 0 && (
-          <View style={styles.tags}>
+          <View style={[styles.tags, sizeStyles.tags]}>
             {book.tags.slice(0, 3).map(tag => (
               <View key={tag} style={[styles.tag, themedStyles.tag, sizeStyles.tag]}>
                 <Text style={[styles.tagText, themedStyles.tagText, sizeStyles.tagText]}>{tag}</Text>

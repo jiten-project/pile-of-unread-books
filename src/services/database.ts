@@ -1,9 +1,17 @@
 import * as SQLite from 'expo-sqlite';
 import { Book } from '../types';
+import { logError, logWarn } from '../utils/logger';
 
 const DB_NAME = 'tsundoku.db';
 
 let db: SQLite.SQLiteDatabase | null = null;
+
+/**
+ * データベースが初期化済みかどうかを返す
+ */
+export function isDatabaseReady(): boolean {
+  return db !== null;
+}
 
 /**
  * マイグレーション定義
@@ -38,7 +46,7 @@ function safeJsonParse<T>(value: unknown, defaultValue: T): T {
   try {
     return JSON.parse(value) as T;
   } catch (error) {
-    console.warn('JSON parse failed, using default value:', error);
+    logWarn('parseJSON', 'JSON parse failed, using default value');
     return defaultValue;
   }
 }
@@ -137,7 +145,7 @@ async function runMigrations(): Promise<void> {
           }
         } else {
           // その他のエラーは再スロー（DBロック、ディスクフル、テーブル不在など）
-          console.error(`Migration ${migration.version} failed: ${migration.description}`, error);
+          logError(`Migration-${migration.version}`, error);
           throw error;
         }
       }
@@ -186,8 +194,14 @@ export async function getFilteredBooks(options: {
   }
 
   if (options.searchQuery) {
-    conditions.push('(title LIKE ? OR authors LIKE ?)');
-    const searchPattern = `%${options.searchQuery}%`;
+    conditions.push(`(title LIKE ? ESCAPE '\\' OR authors LIKE ? ESCAPE '\\')`);
+    // ワイルドカード文字をエスケープし、長さを制限（セキュリティ対策）
+    const sanitizedQuery = options.searchQuery
+      .slice(0, 100) // 最大100文字に制限
+      .replace(/\\/g, '\\\\') // バックスラッシュをエスケープ
+      .replace(/%/g, '\\%')   // %をエスケープ
+      .replace(/_/g, '\\_');  // _をエスケープ
+    const searchPattern = `%${sanitizedQuery}%`;
     params.push(searchPattern, searchPattern);
   }
 

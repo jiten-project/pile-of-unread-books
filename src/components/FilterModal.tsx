@@ -15,7 +15,7 @@ export interface FilterOptions {
   statuses: BookStatus[];
   priorities: Priority[];
   tags: string[];
-  sortBy: 'createdAt' | 'tsundokuDays';
+  sortBy: 'createdAt' | 'tsundokuDays' | 'purchaseDate';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -28,13 +28,14 @@ interface FilterModalProps {
 }
 
 const SORT_OPTIONS: { value: FilterOptions['sortBy']; label: string }[] = [
-  { value: 'createdAt', label: '登録日' },
   { value: 'tsundokuDays', label: '積読期間' },
+  { value: 'purchaseDate', label: '購入日' },
+  { value: 'createdAt', label: '登録日' },
 ];
 
 const SORT_ORDER_OPTIONS: { value: FilterOptions['sortOrder']; label: string }[] = [
-  { value: 'asc', label: '昇順 ↑' },
   { value: 'desc', label: '降順 ↓' },
+  { value: 'asc', label: '昇順 ↑' },
 ];
 
 export default function FilterModal({
@@ -94,7 +95,7 @@ export default function FilterModal({
       statuses: [],
       priorities: [],
       tags: [],
-      sortBy: 'createdAt',
+      sortBy: 'tsundokuDays',
       sortOrder: 'desc',
     });
   };

@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { searchByISBN } from '../services';
 import { RootStackNavigationProp } from '../types';
 import { useTheme } from '../contexts';
+import { logError } from '../utils/logger';
 
 export default function ISBNSearchScreen() {
   const [isbn, setIsbn] = useState('');
@@ -76,7 +77,7 @@ export default function ISBNSearchScreen() {
       }
     } catch (error) {
       Alert.alert('エラー', '書籍情報の取得に失敗しました');
-      console.error(error);
+      logError('isbnSearch', error);
     } finally {
       setIsSearching(false);
     }

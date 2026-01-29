@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -7,12 +7,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { BookCard, BookGridItem, EmptyState, FilterModal, FilterOptions } from '../components';
 import { useBookStore } from '../store';
 import { BookStatus, Book, AppNavigationProp } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, COLORS, DEVICE } from '../constants';
 import { useTheme, useSettings } from '../contexts';
+import { logError } from '../utils/logger';
+
+const STORAGE_KEY_FILTER = '@bookshelf_filter';
+const STORAGE_KEY_VIEW_MODE = '@bookshelf_view_mode';
+const STORAGE_KEY_ADVANCED_FILTERS = '@bookshelf_advanced_filters';
 
 type FilterStatus = BookStatus | 'all';
 type ViewMode = 'list' | 'grid';
@@ -32,7 +38,7 @@ const defaultFilters: FilterOptions = {
   statuses: [],
   priorities: [],
   tags: [],
-  sortBy: 'createdAt',
+  sortBy: 'tsundokuDays',
   sortOrder: 'desc',
 };
 
@@ -42,10 +48,68 @@ export default function BookshelfScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<FilterOptions>(defaultFilters);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
   const { showWishlistInBookshelf, showReleasedInBookshelf, isTsundoku } = useSettings();
+  const isFirstRender = useRef(true);
+
+  // 保存されたフィルター設定を読み込み
+  useEffect(() => {
+    const loadSavedFilters = async () => {
+      try {
+        const [savedFilter, savedViewMode, savedAdvancedFilters] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_FILTER),
+          AsyncStorage.getItem(STORAGE_KEY_VIEW_MODE),
+          AsyncStorage.getItem(STORAGE_KEY_ADVANCED_FILTERS),
+        ]);
+
+        if (savedFilter) {
+          const filter = savedFilter as FilterStatus;
+          // 無効なフィルターは無視
+          if (filter === 'all' || Object.keys(STATUS_LABELS).includes(filter)) {
+            setSelectedFilter(filter);
+          }
+        }
+        if (savedViewMode === 'list' || savedViewMode === 'grid') {
+          setViewMode(savedViewMode);
+        }
+        if (savedAdvancedFilters) {
+          const parsed = JSON.parse(savedAdvancedFilters) as FilterOptions;
+          setAdvancedFilters(parsed);
+        }
+      } catch (error) {
+        logError('bookshelf:loadFilters', error);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    loadSavedFilters();
+  }, []);
+
+  // フィルター設定を保存
+  useEffect(() => {
+    if (!isInitialized || isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const saveFilters = async () => {
+      try {
+        await Promise.all([
+          AsyncStorage.setItem(STORAGE_KEY_FILTER, selectedFilter),
+          AsyncStorage.setItem(STORAGE_KEY_VIEW_MODE, viewMode),
+          AsyncStorage.setItem(STORAGE_KEY_ADVANCED_FILTERS, JSON.stringify(advancedFilters)),
+        ]);
+      } catch (error) {
+        logError('bookshelf:saveFilters', error);
+      }
+    };
+
+    saveFilters();
+  }, [selectedFilter, viewMode, advancedFilters, isInitialized]);
 
   // 設定がOFFになった場合、対応するフィルターをリセット
   useEffect(() => {
@@ -79,7 +143,7 @@ export default function BookshelfScreen() {
     if (advancedFilters.statuses.length > 0) count++;
     if (advancedFilters.priorities.length > 0) count++;
     if (advancedFilters.tags.length > 0) count++;
-    if (advancedFilters.sortBy !== 'createdAt' || advancedFilters.sortOrder !== 'desc') count++;
+    if (advancedFilters.sortBy !== 'tsundokuDays' || advancedFilters.sortOrder !== 'desc') count++;
     return count;
   }, [advancedFilters]);
 
@@ -182,6 +246,12 @@ export default function BookshelfScreen() {
       }
 
       switch (advancedFilters.sortBy) {
+        case 'purchaseDate': {
+          const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
+          const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
+          comparison = dateA - dateB;
+          break;
+        }
         case 'createdAt':
         default:
           comparison = a.createdAt.localeCompare(b.createdAt);
@@ -214,7 +284,7 @@ export default function BookshelfScreen() {
   };
 
   const renderListItem = ({ item }: { item: Book }) => (
-    <BookCard book={item} onPress={() => handleBookPress(item.id)} />
+    <BookCard book={item} onPress={() => handleBookPress(item.id)} size={DEVICE.isTablet ? 'large' : 'normal'} />
   );
 
   const renderGridItem = ({ item }: { item: Book }) => (
@@ -233,13 +303,29 @@ export default function BookshelfScreen() {
     viewButton: { backgroundColor: colors.border },
   };
 
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    searchContainer: { padding: 20 },
+    searchInputWrapper: { paddingHorizontal: 20, borderRadius: 14 },
+    searchIcon: { fontSize: 24, marginRight: 12 },
+    searchInput: { paddingVertical: 16, fontSize: 22 },
+    clearIcon: { fontSize: 28, paddingLeft: 12 },
+    filterList: { paddingHorizontal: 20, paddingVertical: 16, gap: 12 },
+    filterButton: { paddingHorizontal: 24, paddingVertical: 16, borderRadius: 28, marginRight: 12, minHeight: 56 },
+    filterText: { fontSize: 20 },
+    toolbar: { paddingHorizontal: 24, paddingVertical: 16 },
+    countText: { fontSize: 20 },
+    viewButton: { paddingHorizontal: 20, paddingVertical: 14 },
+    viewIcon: { fontSize: 24 },
+  } : {};
+
   return (
     <View style={[styles.container, themedStyles.container]}>
-      <View style={[styles.searchContainer, themedStyles.searchContainer]}>
-        <View style={[styles.searchInputWrapper, themedStyles.searchInputWrapper]}>
-          <Text style={styles.searchIcon}>🔍</Text>
+      <View style={[styles.searchContainer, themedStyles.searchContainer, tabletStyles.searchContainer]}>
+        <View style={[styles.searchInputWrapper, themedStyles.searchInputWrapper, tabletStyles.searchInputWrapper]}>
+          <Text style={[styles.searchIcon, tabletStyles.searchIcon]}>🔍</Text>
           <TextInput
-            style={[styles.searchInput, themedStyles.searchInput]}
+            style={[styles.searchInput, themedStyles.searchInput, tabletStyles.searchInput]}
             placeholder="タイトル、著者、タグで検索"
             placeholderTextColor={colors.placeholder}
             value={searchQuery}
@@ -248,7 +334,7 @@ export default function BookshelfScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={[styles.clearIcon, { color: colors.textTertiary }]}>×</Text>
+              <Text style={[styles.clearIcon, { color: colors.textTertiary }, tabletStyles.clearIcon]}>×</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -260,12 +346,13 @@ export default function BookshelfScreen() {
           data={filterOptions}
           keyExtractor={item => item.value}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterList}
+          contentContainerStyle={[styles.filterList, tabletStyles.filterList]}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
                 styles.filterButton,
                 themedStyles.filterButton,
+                tabletStyles.filterButton,
                 selectedFilter === item.value && {
                   backgroundColor: getFilterColor(item.value),
                   borderColor: getFilterColor(item.value),
@@ -277,6 +364,7 @@ export default function BookshelfScreen() {
                 style={[
                   styles.filterText,
                   themedStyles.filterText,
+                  tabletStyles.filterText,
                   selectedFilter === item.value && styles.filterTextSelected,
                 ]}
               >
@@ -289,6 +377,7 @@ export default function BookshelfScreen() {
               style={[
                 styles.filterButton,
                 themedStyles.filterButton,
+                tabletStyles.filterButton,
                 activeFilterCount > 0 && { backgroundColor: colors.primaryLight, borderColor: colors.primary },
               ]}
               onPress={() => setShowFilterModal(true)}
@@ -297,6 +386,7 @@ export default function BookshelfScreen() {
                 style={[
                   styles.filterText,
                   themedStyles.filterText,
+                  tabletStyles.filterText,
                   activeFilterCount > 0 && { color: colors.primary, fontWeight: '600' },
                 ]}
               >
@@ -307,20 +397,20 @@ export default function BookshelfScreen() {
         />
       </View>
 
-      <View style={styles.toolbar}>
-        <Text style={[styles.countText, themedStyles.countText]}>{filteredBooks.length} 冊</Text>
+      <View style={[styles.toolbar, tabletStyles.toolbar]}>
+        <Text style={[styles.countText, themedStyles.countText, tabletStyles.countText]}>{filteredBooks.length} 冊</Text>
         <View style={styles.viewToggle}>
           <TouchableOpacity
-            style={[styles.viewButton, themedStyles.viewButton, viewMode === 'list' && { backgroundColor: colors.primary }]}
+            style={[styles.viewButton, themedStyles.viewButton, tabletStyles.viewButton, viewMode === 'list' && { backgroundColor: colors.primary }]}
             onPress={() => setViewMode('list')}
           >
-            <Text style={[styles.viewButtonText, viewMode === 'list' && { color: '#fff' }]}>≡</Text>
+            <Text style={[styles.viewButtonText, tabletStyles.viewIcon, viewMode === 'list' && { color: '#fff' }]}>≡</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.viewButton, themedStyles.viewButton, viewMode === 'grid' && { backgroundColor: colors.primary }]}
+            style={[styles.viewButton, themedStyles.viewButton, tabletStyles.viewButton, viewMode === 'grid' && { backgroundColor: colors.primary }]}
             onPress={() => setViewMode('grid')}
           >
-            <Text style={[styles.viewButtonText, viewMode === 'grid' && { color: '#fff' }]}>⊞</Text>
+            <Text style={[styles.viewButtonText, tabletStyles.viewIcon, viewMode === 'grid' && { color: '#fff' }]}>⊞</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -349,10 +439,10 @@ export default function BookshelfScreen() {
         />
       ) : (
         <FlatList
-          key={`grid-view-${DEVICE.isTablet ? 5 : 3}`}
+          key={`grid-view-${DEVICE.isTablet ? 4 : 3}`}
           data={filteredBooks}
           keyExtractor={item => item.id}
-          numColumns={DEVICE.isTablet ? 5 : 3}
+          numColumns={DEVICE.isTablet ? 4 : 3}
           contentContainerStyle={styles.gridContent}
           columnWrapperStyle={styles.gridRow}
           renderItem={renderGridItem}
@@ -457,6 +547,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   gridRow: {
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
 });

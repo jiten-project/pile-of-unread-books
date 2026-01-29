@@ -70,6 +70,9 @@ const TAB_BAR_HEIGHT = Math.round(80 * TAB_SCALE);
 const TAB_BAR_PADDING_BOTTOM = 0;
 const TAB_BAR_PADDING_TOP = Math.round(32 * TAB_SCALE);
 
+// ヘッダータイトルのサイズ（iPadでは大きく）
+const HEADER_TITLE_SIZE = DEVICE.isTablet ? 22 : 17;
+
 export default function TabNavigator() {
   const { colors } = useTheme();
 
@@ -79,6 +82,7 @@ export default function TabNavigator() {
         headerShown: true,
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.textPrimary,
+        headerTitleStyle: { fontSize: HEADER_TITLE_SIZE },
         tabBarStyle: {
           height: TAB_BAR_HEIGHT,
           paddingBottom: TAB_BAR_PADDING_BOTTOM,
