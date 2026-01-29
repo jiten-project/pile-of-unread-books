@@ -14,6 +14,9 @@ const scaleFactor = Math.min(Math.max(rawScale, 0.85), 1.5);
 // デバイス種別判定
 const isTablet = screenWidth > 600;
 
+// iPad用スケールファクター（iPhoneと同じサイズで、レイアウトで対応）
+const tabletScale = 1.0;
+
 // アプリ共通のテーマカラー
 export const COLORS = {
   // プライマリカラー
@@ -103,4 +106,5 @@ export const DEVICE = {
   isTablet,
   screenWidth,
   scaleFactor,
+  tabletScale,
 } as const;

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -11,18 +11,21 @@ import { useNavigation } from '@react-navigation/native';
 import { BookCard, BookGridItem, EmptyState, FilterModal, FilterOptions } from '../components';
 import { useBookStore } from '../store';
 import { BookStatus, Book, AppNavigationProp } from '../types';
-import { STATUS_LABELS, STATUS_COLORS, COLORS } from '../constants';
-import { useTheme } from '../contexts';
+import { STATUS_LABELS, STATUS_COLORS, COLORS, DEVICE } from '../constants';
+import { useTheme, useSettings } from '../contexts';
 
 type FilterStatus = BookStatus | 'all';
 type ViewMode = 'list' | 'grid';
 
-const filterOptions: { value: FilterStatus; label: string }[] = [
+// フィルターオプションの基本リスト（設定に応じて動的にフィルタリング）
+const baseFilterOptions: { value: FilterStatus; label: string; optional?: 'wishlist' | 'released' }[] = [
   { value: 'all', label: 'すべて' },
+  { value: 'wishlist', label: STATUS_LABELS.wishlist, optional: 'wishlist' },
   { value: 'unread', label: STATUS_LABELS.unread },
   { value: 'reading', label: STATUS_LABELS.reading },
   { value: 'paused', label: STATUS_LABELS.paused },
   { value: 'completed', label: STATUS_LABELS.completed },
+  { value: 'released', label: STATUS_LABELS.released, optional: 'released' },
 ];
 
 const defaultFilters: FilterOptions = {
@@ -42,6 +45,17 @@ export default function BookshelfScreen() {
   const { books } = useBookStore();
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
+  const { showWishlistInBookshelf, showReleasedInBookshelf, isTsundoku } = useSettings();
+
+  // 設定がOFFになった場合、対応するフィルターをリセット
+  useEffect(() => {
+    if (!showWishlistInBookshelf && selectedFilter === 'wishlist') {
+      setSelectedFilter('all');
+    }
+    if (!showReleasedInBookshelf && selectedFilter === 'released') {
+      setSelectedFilter('all');
+    }
+  }, [showWishlistInBookshelf, showReleasedInBookshelf, selectedFilter]);
 
   // 利用可能なタグを抽出
   const availableTags = useMemo(() => {
@@ -49,6 +63,15 @@ export default function BookshelfScreen() {
     books.forEach(book => book.tags.forEach(tag => tagSet.add(tag)));
     return Array.from(tagSet).sort();
   }, [books]);
+
+  // 設定に応じてフィルターオプションを生成
+  const filterOptions = useMemo(() => {
+    return baseFilterOptions.filter(option => {
+      if (option.optional === 'wishlist') return showWishlistInBookshelf;
+      if (option.optional === 'released') return showReleasedInBookshelf;
+      return true;
+    });
+  }, [showWishlistInBookshelf, showReleasedInBookshelf]);
 
   // アクティブなフィルター数を計算
   const activeFilterCount = useMemo(() => {
@@ -66,6 +89,14 @@ export default function BookshelfScreen() {
     // クイックステータスフィルター
     if (selectedFilter !== 'all') {
       result = result.filter(book => book.status === selectedFilter);
+    } else {
+      // 「すべて」選択時に設定に応じて除外
+      if (!showWishlistInBookshelf) {
+        result = result.filter(book => book.status !== 'wishlist');
+      }
+      if (!showReleasedInBookshelf) {
+        result = result.filter(book => book.status !== 'released');
+      }
     }
 
     // 詳細フィルター - ステータス
@@ -99,16 +130,58 @@ export default function BookshelfScreen() {
     // ソート
     result = [...result].sort((a, b) => {
       let comparison = 0;
+
+      // 積読期間ソートの場合の特別処理
+      if (advancedFilters.sortBy === 'tsundokuDays') {
+        // 解放・ほしいは常に最後（昇順/降順に関係なく）
+        const isAlwaysLastA = a.status === 'released' || a.status === 'wishlist';
+        const isAlwaysLastB = b.status === 'released' || b.status === 'wishlist';
+        if (isAlwaysLastA && !isAlwaysLastB) return 1;
+        if (!isAlwaysLastA && isAlwaysLastB) return -1;
+        if (isAlwaysLastA && isAlwaysLastB) {
+          // 両方最後のグループなら解放→ほしいの順
+          if (a.status === 'released' && b.status === 'wishlist') return -1;
+          if (a.status === 'wishlist' && b.status === 'released') return 1;
+          return 0;
+        }
+
+        const isTsundokuA = isTsundoku(a.status);
+        const isTsundokuB = isTsundoku(b.status);
+
+        // 両方とも積読の場合は日付で比較
+        if (isTsundokuA && isTsundokuB) {
+          const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
+          const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
+          comparison = dateB - dateA;
+          return advancedFilters.sortOrder === 'asc' ? comparison : -comparison;
+        }
+
+        // 積読 vs 非積読: 積読を先に
+        if (isTsundokuA && !isTsundokuB) return -1;
+        if (!isTsundokuA && isTsundokuB) return 1;
+
+        // 両方とも非積読の場合（読了、読書中、中断）
+        // 読了→読書中→中断の順で積読期間が短いと判断
+        const statusPriority: Record<string, number> = {
+          completed: 1,  // 読了: 最も積読期間が短い
+          reading: 2,    // 読書中
+          paused: 3,     // 中断
+        };
+        const priorityA = statusPriority[a.status] || 50;
+        const priorityB = statusPriority[b.status] || 50;
+        if (priorityA !== priorityB) {
+          comparison = priorityA - priorityB;
+          return advancedFilters.sortOrder === 'asc' ? comparison : -comparison;
+        }
+
+        // 同じステータスなら日付で比較
+        const dateA = new Date(a.purchaseDate || a.createdAt).getTime();
+        const dateB = new Date(b.purchaseDate || b.createdAt).getTime();
+        comparison = dateB - dateA;
+        return advancedFilters.sortOrder === 'asc' ? comparison : -comparison;
+      }
+
       switch (advancedFilters.sortBy) {
-        case 'title':
-          comparison = a.title.localeCompare(b.title, 'ja');
-          break;
-        case 'authors':
-          comparison = (a.authors[0] || '').localeCompare(b.authors[0] || '', 'ja');
-          break;
-        case 'purchaseDate':
-          comparison = (a.purchaseDate || '').localeCompare(b.purchaseDate || '');
-          break;
         case 'createdAt':
         default:
           comparison = a.createdAt.localeCompare(b.createdAt);
@@ -118,7 +191,7 @@ export default function BookshelfScreen() {
     });
 
     return result;
-  }, [books, selectedFilter, searchQuery, advancedFilters]);
+  }, [books, selectedFilter, searchQuery, advancedFilters, showWishlistInBookshelf, showReleasedInBookshelf, isTsundoku]);
 
   const handleBookPress = useCallback(
     (bookId: string) => {
@@ -276,10 +349,10 @@ export default function BookshelfScreen() {
         />
       ) : (
         <FlatList
-          key="grid-view"
+          key={`grid-view-${DEVICE.isTablet ? 5 : 3}`}
           data={filteredBooks}
           keyExtractor={item => item.id}
-          numColumns={3}
+          numColumns={DEVICE.isTablet ? 5 : 3}
           contentContainerStyle={styles.gridContent}
           columnWrapperStyle={styles.gridRow}
           renderItem={renderGridItem}
