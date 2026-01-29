@@ -20,7 +20,7 @@ interface TsundokuStats {
 
 /**
  * ユーザー定義に基づく積読統計を計算するカスタムフック
- * 設定画面で選んだプリセット（厳格派/中間派/ゆるふわ派）に基づいて算出
+ * 設定画面で選んだプリセット（厳格派/穏健派/ゆるふわ派）に基づいて算出
  */
 export function useTsundokuStats(): TsundokuStats {
   const { books } = useBookStore();
