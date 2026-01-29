@@ -12,8 +12,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { usePersistBook } from '../hooks';
 import { BookStatus, RootStackNavigationProp, BookDetailRouteProp } from '../types';
-import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
-import { formatDate, formatPrice, joinWithComma } from '../utils';
+import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS, DEVICE } from '../constants';
+import { formatDate, formatPrice, formatPublishedDate, joinWithComma } from '../utils';
 import { useTheme, useSettings } from '../contexts';
 
 export default function BookDetailScreen() {
@@ -47,6 +47,38 @@ export default function BookDetailScreen() {
     placeholderImage: { backgroundColor: colors.border },
     placeholderText: { color: colors.textTertiary },
   };
+
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    content: { padding: 24, paddingBottom: 60 },
+    header: { padding: 24, marginBottom: 24 },
+    imageContainer: { width: 160, height: 240 },
+    headerInfo: { marginLeft: 24 },
+    title: { fontSize: 28, marginBottom: 8 },
+    authors: { fontSize: 20, marginBottom: 8 },
+    publisher: { fontSize: 16, marginBottom: 12 },
+    badges: { gap: 10 },
+    badge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 14 },
+    badgeText: { fontSize: 16 },
+    section: { padding: 24, marginBottom: 24 },
+    sectionTitle: { fontSize: 22, marginBottom: 16 },
+    statusButtons: { gap: 12 },
+    statusButton: { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 24, minHeight: 56 },
+    statusButtonText: { fontSize: 18 },
+    infoRow: { paddingVertical: 12 },
+    infoLabel: { fontSize: 18 },
+    infoValue: { fontSize: 18 },
+    conditionBadge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12 },
+    conditionBadgeText: { fontSize: 16 },
+    tags: { gap: 12 },
+    tag: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, minHeight: 44 },
+    tagText: { fontSize: 18 },
+    noteText: { fontSize: 18, lineHeight: 28 },
+    actionButtons: { gap: 16, marginTop: 16 },
+    actionButton: { paddingVertical: 20, borderRadius: 16 },
+    actionButtonText: { fontSize: 20 },
+    placeholderText: { fontSize: 16 },
+  } : {};
 
   if (!book) {
     return (
@@ -88,40 +120,40 @@ export default function BookDetailScreen() {
   return (
     <ScrollView
       style={[styles.container, themedStyles.container]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, tabletStyles.content]}
     >
-      <View style={[styles.header, themedStyles.header]}>
-        <View style={styles.imageContainer}>
+      <View style={[styles.header, themedStyles.header, tabletStyles.header]}>
+        <View style={[styles.imageContainer, tabletStyles.imageContainer]}>
           {book.thumbnailUrl ? (
             <Image source={{ uri: book.thumbnailUrl }} style={styles.image} />
           ) : (
             <View style={[styles.placeholderImage, themedStyles.placeholderImage]}>
-              <Text style={[styles.placeholderText, themedStyles.placeholderText]}>No Image</Text>
+              <Text style={[styles.placeholderText, themedStyles.placeholderText, tabletStyles.placeholderText]}>No Image</Text>
             </View>
           )}
         </View>
 
-        <View style={styles.headerInfo}>
-          <Text style={[styles.title, themedStyles.title]}>{book.title}</Text>
-          <Text style={[styles.authors, themedStyles.authors]}>{joinWithComma(book.authors)}</Text>
+        <View style={[styles.headerInfo, tabletStyles.headerInfo]}>
+          <Text style={[styles.title, themedStyles.title, tabletStyles.title]}>{book.title}</Text>
+          <Text style={[styles.authors, themedStyles.authors, tabletStyles.authors]}>{joinWithComma(book.authors)}</Text>
           {book.publisher && (
-            <Text style={[styles.publisher, themedStyles.publisher]}>{book.publisher}</Text>
+            <Text style={[styles.publisher, themedStyles.publisher, tabletStyles.publisher]}>{book.publisher}</Text>
           )}
 
-          <View style={styles.badges}>
-            <View style={[styles.badge, { backgroundColor: STATUS_COLORS[book.status] }]}>
-              <Text style={styles.badgeText}>{STATUS_LABELS[book.status]}</Text>
+          <View style={[styles.badges, tabletStyles.badges]}>
+            <View style={[styles.badge, { backgroundColor: STATUS_COLORS[book.status] }, tabletStyles.badge]}>
+              <Text style={[styles.badgeText, tabletStyles.badgeText]}>{STATUS_LABELS[book.status]}</Text>
             </View>
-            <View style={[styles.badge, { backgroundColor: PRIORITY_COLORS[book.priority] }]}>
-              <Text style={styles.badgeText}>優先度: {PRIORITY_LABELS[book.priority]}</Text>
+            <View style={[styles.badge, { backgroundColor: PRIORITY_COLORS[book.priority] }, tabletStyles.badge]}>
+              <Text style={[styles.badgeText, tabletStyles.badgeText]}>優先度: {PRIORITY_LABELS[book.priority]}</Text>
             </View>
           </View>
         </View>
       </View>
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>ステータス変更</Text>
-        <View style={styles.statusButtons}>
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>ステータス変更</Text>
+        <View style={[styles.statusButtons, tabletStyles.statusButtons]}>
           {(Object.keys(STATUS_LABELS) as BookStatus[])
             .filter(status => {
               // 設定でOFFの場合は非表示
@@ -135,6 +167,7 @@ export default function BookDetailScreen() {
                 style={[
                   styles.statusButton,
                   themedStyles.statusButton,
+                  tabletStyles.statusButton,
                   book.status === status && { backgroundColor: STATUS_COLORS[status], borderColor: STATUS_COLORS[status] },
                 ]}
                 onPress={() => handleStatusChange(status)}
@@ -143,6 +176,7 @@ export default function BookDetailScreen() {
                   style={[
                     styles.statusButtonText,
                     themedStyles.statusButtonText,
+                    tabletStyles.statusButtonText,
                     book.status === status && styles.statusButtonTextActive,
                   ]}
                 >
@@ -154,39 +188,39 @@ export default function BookDetailScreen() {
       </View>
 
       {book.purchaseReason && (
-        <View style={[styles.section, themedStyles.section]}>
-          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>📝 購入動機</Text>
-          <Text style={[styles.noteText, themedStyles.noteText]}>{book.purchaseReason}</Text>
+        <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>📝 購入動機</Text>
+          <Text style={[styles.noteText, themedStyles.noteText, tabletStyles.noteText]}>{book.purchaseReason}</Text>
         </View>
       )}
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>書籍情報</Text>
-        <InfoRow label="ISBN" value={book.isbn || '-'} colors={colors} />
-        <InfoRow label="出版日" value={book.publishedDate || '-'} colors={colors} />
-        <InfoRow label="ページ数" value={book.pageCount ? `${book.pageCount}ページ` : '-'} colors={colors} />
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>書籍情報</Text>
+        <InfoRow label="ISBN" value={book.isbn || '-'} colors={colors} tabletStyles={tabletStyles} />
+        <InfoRow label="出版日" value={formatPublishedDate(book.publishedDate)} colors={colors} tabletStyles={tabletStyles} />
+        <InfoRow label="ページ数" value={book.pageCount ? `${book.pageCount}ページ` : '-'} colors={colors} tabletStyles={tabletStyles} />
       </View>
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>購入情報</Text>
-        <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }]}>
-          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>本の状態</Text>
-          <View style={[styles.conditionBadge, { backgroundColor: CONDITION_COLORS[book.condition] }]}>
-            <Text style={styles.conditionBadgeText}>{CONDITION_LABELS[book.condition]}</Text>
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>購入情報</Text>
+        <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }, tabletStyles.infoRow]}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }, tabletStyles.infoLabel]}>本の状態</Text>
+          <View style={[styles.conditionBadge, { backgroundColor: CONDITION_COLORS[book.condition] }, tabletStyles.conditionBadge]}>
+            <Text style={[styles.conditionBadgeText, tabletStyles.conditionBadgeText]}>{CONDITION_LABELS[book.condition]}</Text>
           </View>
         </View>
-        <InfoRow label="購入日" value={formatDate(book.purchaseDate)} colors={colors} />
-        <InfoRow label="購入場所" value={book.purchasePlace || '-'} colors={colors} />
-        <InfoRow label="購入価格" value={formatPrice(book.purchasePrice)} colors={colors} />
+        <InfoRow label="購入日" value={formatDate(book.purchaseDate)} colors={colors} tabletStyles={tabletStyles} />
+        <InfoRow label="購入場所" value={book.purchasePlace || '-'} colors={colors} tabletStyles={tabletStyles} />
+        <InfoRow label="購入価格" value={formatPrice(book.purchasePrice)} colors={colors} tabletStyles={tabletStyles} />
       </View>
 
       {book.tags.length > 0 && (
-        <View style={[styles.section, themedStyles.section]}>
-          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>タグ</Text>
-          <View style={styles.tags}>
+        <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>タグ</Text>
+          <View style={[styles.tags, tabletStyles.tags]}>
             {book.tags.map(tag => (
-              <View key={tag} style={[styles.tag, { backgroundColor: colors.primaryLight }]}>
-                <Text style={[styles.tagText, { color: colors.primary }]}>{tag}</Text>
+              <View key={tag} style={[styles.tag, { backgroundColor: colors.primaryLight }, tabletStyles.tag]}>
+                <Text style={[styles.tagText, { color: colors.primary }, tabletStyles.tagText]}>{tag}</Text>
               </View>
             ))}
           </View>
@@ -194,33 +228,33 @@ export default function BookDetailScreen() {
       )}
 
       {book.notes && (
-        <View style={[styles.section, themedStyles.section]}>
-          <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>📄 メモ</Text>
-          <Text style={[styles.noteText, themedStyles.noteText]}>{book.notes}</Text>
+        <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+          <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>📄 メモ</Text>
+          <Text style={[styles.noteText, themedStyles.noteText, tabletStyles.noteText]}>{book.notes}</Text>
         </View>
       )}
 
-      <View style={[styles.section, themedStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>記録</Text>
-        <InfoRow label="登録日" value={formatDate(book.createdAt)} colors={colors} />
-        <InfoRow label="読書開始日" value={formatDate(book.startDate)} colors={colors} />
-        <InfoRow label="読了日" value={formatDate(book.completedDate)} colors={colors} />
+      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
+        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>記録</Text>
+        <InfoRow label="登録日" value={formatDate(book.createdAt)} colors={colors} tabletStyles={tabletStyles} />
+        <InfoRow label="読書開始日" value={formatDate(book.startDate)} colors={colors} tabletStyles={tabletStyles} />
+        <InfoRow label="読了日" value={formatDate(book.completedDate)} colors={colors} tabletStyles={tabletStyles} />
       </View>
 
-      <View style={styles.actionButtons}>
+      <View style={[styles.actionButtons, tabletStyles.actionButtons]}>
         <TouchableOpacity
-          style={[styles.editButton, { backgroundColor: colors.primary }]}
+          style={[styles.editButton, { backgroundColor: colors.primary }, tabletStyles.actionButton]}
           onPress={() => navigation.navigate('BookEdit', { bookId: book.id })}
         >
-          <Text style={styles.editButtonText}>この本を編集する</Text>
+          <Text style={[styles.editButtonText, tabletStyles.actionButtonText]}>この本を編集する</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
+          style={[styles.deleteButton, tabletStyles.actionButton, isDeleting && styles.deleteButtonDisabled]}
           onPress={handleDelete}
           disabled={isDeleting}
         >
-          <Text style={styles.deleteButtonText}>
+          <Text style={[styles.deleteButtonText, tabletStyles.actionButtonText]}>
             {isDeleting ? '削除中...' : 'この本を削除する'}
           </Text>
         </TouchableOpacity>
@@ -237,13 +271,18 @@ interface InfoRowProps {
     textPrimary: string;
     borderLight: string;
   };
+  tabletStyles?: {
+    infoRow?: object;
+    infoLabel?: object;
+    infoValue?: object;
+  };
 }
 
-function InfoRow({ label, value, colors }: InfoRowProps) {
+function InfoRow({ label, value, colors, tabletStyles = {} }: InfoRowProps) {
   return (
-    <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }]}>
-      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{value}</Text>
+    <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }, tabletStyles.infoRow]}>
+      <Text style={[styles.infoLabel, { color: colors.textSecondary }, tabletStyles.infoLabel]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: colors.textPrimary }, tabletStyles.infoValue]}>{value}</Text>
     </View>
   );
 }

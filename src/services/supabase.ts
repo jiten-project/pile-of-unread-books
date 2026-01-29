@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logError } from '../utils/logger';
 
 // Supabase設定
 // 注意: Publishable keyは公開可能（RLSで保護されている前提）
@@ -22,12 +23,12 @@ export async function testSupabaseConnection(): Promise<boolean> {
     const { error } = await supabase.from('books').select('count').limit(1);
     // テーブルがまだない場合もエラーになるが、接続自体は成功
     if (error && !error.message.includes('does not exist')) {
-      console.error('Supabase connection error:', error);
+      logError('supabase:connection', error);
       return false;
     }
     return true;
   } catch (e) {
-    console.error('Supabase connection failed:', e);
+    logError('supabase:connection', e);
     return false;
   }
 }

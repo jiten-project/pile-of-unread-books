@@ -15,6 +15,7 @@ import { BookStatus, Priority, BookCondition, RootStackNavigationProp, BookConfi
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
 import { useTheme } from '../contexts';
 import { parsePrice } from '../utils';
+import { logError } from '../utils/logger';
 
 interface AdditionalData {
   status: BookStatus;
@@ -25,6 +26,8 @@ interface AdditionalData {
   purchaseReason: string;
   tags: string[];
   notes: string;
+  pageCount: string;
+  publishedDate: string;
 }
 
 const statusOptions = Object.entries(STATUS_LABELS).map(([value, label]) => ({
@@ -80,10 +83,12 @@ export default function BookConfirmScreen() {
     priority: 'medium',
     condition: 'new',
     purchasePlace: '',
-    purchasePrice: '',
+    purchasePrice: bookInfo.listPrice ? String(bookInfo.listPrice) : '',
     purchaseReason: '',
     tags: [],
     notes: '',
+    pageCount: bookInfo.pageCount ? String(bookInfo.pageCount) : '',
+    publishedDate: bookInfo.publishedDate || '',
   });
 
   const updateField = <K extends keyof AdditionalData>(field: K, value: AdditionalData[K]) => {
@@ -93,8 +98,11 @@ export default function BookConfirmScreen() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await addBook({
+      const pageCountNum = additionalData.pageCount.trim() ? parseInt(additionalData.pageCount, 10) : undefined;
+      const result = await addBook({
         ...bookInfo,
+        pageCount: pageCountNum && !isNaN(pageCountNum) && pageCountNum > 0 ? pageCountNum : undefined,
+        publishedDate: additionalData.publishedDate.trim() || undefined,
         status: additionalData.status,
         priority: additionalData.priority,
         condition: additionalData.condition,
@@ -106,6 +114,24 @@ export default function BookConfirmScreen() {
         notes: additionalData.notes.trim() || undefined,
       });
 
+      if (!result.success) {
+        if (result.error === 'duplicate') {
+          Alert.alert(
+            '登録済みの本です',
+            `「${result.existingBook.title}」は既に登録されています`,
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  navigation.navigate('Main');
+                },
+              },
+            ]
+          );
+          return;
+        }
+      }
+
       Alert.alert('登録完了', `「${bookInfo.title}」を登録しました`, [
         {
           text: 'OK',
@@ -116,7 +142,7 @@ export default function BookConfirmScreen() {
       ]);
     } catch (error) {
       Alert.alert('エラー', '登録に失敗しました');
-      console.error(error);
+      logError('bookConfirm', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -159,25 +185,34 @@ export default function BookConfirmScreen() {
           </View>
         )}
 
-        <View style={[styles.metaRow, themedStyles.borderColor]}>
-          {bookInfo.pageCount && (
+        {bookInfo.listPrice && (
+          <View style={[styles.metaRow, themedStyles.borderColor]}>
             <View style={styles.metaItem}>
-              <Text style={[styles.metaLabel, themedStyles.metaLabel]}>ページ数</Text>
+              <Text style={[styles.metaLabel, themedStyles.metaLabel]}>定価</Text>
               <Text style={[styles.metaValue, themedStyles.metaValue]}>
-                {bookInfo.pageCount}ページ
+                ¥{bookInfo.listPrice.toLocaleString()}
               </Text>
             </View>
-          )}
-          {bookInfo.publishedDate && (
-            <View style={styles.metaItem}>
-              <Text style={[styles.metaLabel, themedStyles.metaLabel]}>発売日</Text>
-              <Text style={[styles.metaValue, themedStyles.metaValue]}>
-                {bookInfo.publishedDate}
-              </Text>
-            </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
+
+      <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>書籍情報（編集可）</Text>
+
+      <FormInput
+        label="ページ数"
+        value={additionalData.pageCount}
+        onChangeText={v => updateField('pageCount', v)}
+        placeholder="ページ数"
+        keyboardType="numeric"
+      />
+
+      <FormInput
+        label="発売日"
+        value={additionalData.publishedDate}
+        onChangeText={v => updateField('publishedDate', v)}
+        placeholder="例: 2024-01-15 または 2024年1月"
+      />
 
       <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>登録情報</Text>
 

@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { useTheme } from '../contexts';
+import { DEVICE } from '../constants';
 
 interface FormInputProps extends TextInputProps {
   label: string;
@@ -10,9 +11,17 @@ interface FormInputProps extends TextInputProps {
 export default function FormInput({ label, error, required, style, ...props }: FormInputProps) {
   const { colors } = useTheme();
 
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    container: { marginBottom: 20 },
+    label: { fontSize: 18, marginBottom: 10 },
+    input: { paddingHorizontal: 16, paddingVertical: 16, fontSize: 20, minHeight: 60, borderRadius: 12 },
+    errorText: { fontSize: 16, marginTop: 6 },
+  } : {};
+
   return (
-    <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.textPrimary }]}>
+    <View style={[styles.container, tabletStyles.container]}>
+      <Text style={[styles.label, { color: colors.textPrimary }, tabletStyles.label]}>
         {label}
         {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
       </Text>
@@ -24,13 +33,14 @@ export default function FormInput({ label, error, required, style, ...props }: F
             backgroundColor: colors.surface,
             color: colors.textPrimary,
           },
+          tabletStyles.input,
           style,
         ]}
         placeholderTextColor={colors.placeholder}
         accessibilityLabel={label}
         {...props}
       />
-      {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
+      {error && <Text style={[styles.errorText, { color: colors.error }, tabletStyles.errorText]}>{error}</Text>}
     </View>
   );
 }

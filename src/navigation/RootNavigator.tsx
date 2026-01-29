@@ -6,6 +6,7 @@ import {
   BarcodeScanScreen,
   BookConfirmScreen,
   ISBNSearchScreen,
+  TitleSearchScreen,
   NotificationSettingsScreen,
   TagManagementScreen,
   TermsOfServiceScreen,
@@ -14,12 +15,20 @@ import {
   DisclaimerScreen,
 } from '../screens';
 import { RootStackParamList } from '../types';
+import { DEVICE } from '../constants/theme';
+
+// ヘッダータイトルのサイズ（iPadでは大きく）
+const HEADER_TITLE_SIZE = DEVICE.isTablet ? 22 : 17;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerTitleStyle: { fontSize: HEADER_TITLE_SIZE },
+      }}
+    >
       <Stack.Screen
         name="Main"
         component={TabNavigator}
@@ -64,6 +73,14 @@ export default function RootNavigator() {
         component={ISBNSearchScreen}
         options={{
           title: 'ISBN検索',
+          headerBackTitle: '戻る',
+        }}
+      />
+      <Stack.Screen
+        name="TitleSearch"
+        component={TitleSearchScreen}
+        options={{
+          title: 'タイトル検索',
           headerBackTitle: '戻る',
         }}
       />

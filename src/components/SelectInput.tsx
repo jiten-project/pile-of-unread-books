@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../contexts';
+import { DEVICE } from '../constants';
 
 interface Option<T> {
   label: string;
@@ -24,13 +25,22 @@ export default function SelectInput<T extends string>({
 }: SelectInputProps<T>) {
   const { colors } = useTheme();
 
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    container: { marginBottom: 20 },
+    label: { fontSize: 18, marginBottom: 10 },
+    optionsContainer: { gap: 12 },
+    option: { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 24, minHeight: 56 },
+    optionText: { fontSize: 18 },
+  } : {};
+
   return (
-    <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.textPrimary }]}>
+    <View style={[styles.container, tabletStyles.container]}>
+      <Text style={[styles.label, { color: colors.textPrimary }, tabletStyles.label]}>
         {label}
         {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
       </Text>
-      <View style={styles.optionsContainer}>
+      <View style={[styles.optionsContainer, tabletStyles.optionsContainer]}>
         {options.map(option => {
           const isSelected = value === option.value;
           return (
@@ -46,6 +56,7 @@ export default function SelectInput<T extends string>({
                     ? option.color || colors.primary
                     : colors.border,
                 },
+                tabletStyles.option,
               ]}
               onPress={() => onChange(option.value)}
               accessibilityRole="button"
@@ -59,6 +70,7 @@ export default function SelectInput<T extends string>({
                     color: isSelected ? '#fff' : colors.textSecondary,
                     fontWeight: isSelected ? '600' : 'normal',
                   },
+                  tabletStyles.optionText,
                 ]}
               >
                 {option.label}
