@@ -11,11 +11,11 @@ export interface TsundokuDefinition {
   includePaused: boolean;    // 中断
 }
 
-// デフォルト: 未読のみを積読とする
+// デフォルト: 未読と中断を積読とする（穏健派）
 const DEFAULT_TSUNDOKU_DEFINITION: TsundokuDefinition = {
   includeUnread: true,
   includeReading: false,
-  includePaused: false,
+  includePaused: true,
 };
 
 // プリセット定義
@@ -26,7 +26,7 @@ export const TSUNDOKU_PRESETS = {
     definition: { includeUnread: true, includeReading: false, includePaused: false },
   },
   moderate: {
-    name: '中間派',
+    name: '穏健派',
     description: '未読と中断が積読',
     definition: { includeUnread: true, includeReading: false, includePaused: true },
   },

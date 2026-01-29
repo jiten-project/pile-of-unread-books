@@ -57,7 +57,7 @@ export default function StatsScreen() {
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>(6);
 
   // 積読統計（カスタムフックで一元管理）
-  const { tsundokuSpent, avgTsundokuDays, tsundokuPages } = useTsundokuStats();
+  const { tsundokuCount, tsundokuSpent, avgTsundokuDays, tsundokuPages } = useTsundokuStats();
 
   const stats = useMemo(() => {
     // ステータス別集計
@@ -181,9 +181,9 @@ export default function StatsScreen() {
       <View style={[styles.summaryRow, tabletStyles.summaryRow]}>
         <SummaryCard label="総登録数" value={`${stats.total}冊`} color="#007AFF" />
         <SummaryCard
-          label="読了率"
-          value={`${Math.round((stats.statusCounts.completed / stats.total) * 100)}%`}
-          color="#4CAF50"
+          label="積読率"
+          value={`${stats.total > 0 ? Math.round((tsundokuCount / stats.total) * 100) : 0}%`}
+          color="#FF9800"
         />
       </View>
 
@@ -191,7 +191,7 @@ export default function StatsScreen() {
         <SummaryCard label="平均積読期間" value={`${avgTsundokuDays}日`} color="#FF9800" />
         <SummaryCard
           label="積読ページ"
-          value={`${tsundokuPages.toLocaleString()}P`}
+          value={`${tsundokuPages.toLocaleString()}頁`}
           color="#2196F3"
         />
       </View>
