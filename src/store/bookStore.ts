@@ -18,6 +18,7 @@ interface BookState {
   deleteBook: (id: string) => void;
   updateStatus: (id: string, status: BookStatus) => void;
   getBookById: (id: string) => Book | undefined;
+  getBookByISBN: (isbn: string) => Book | undefined;
   getBooksByStatus: (status: BookStatus) => Book[];
   setBooks: (books: Book[]) => void;
   setLoading: (isLoading: boolean) => void;
@@ -101,6 +102,15 @@ export const useBookStore = create<BookState>((set, get) => ({
 
   getBookById: (id: string) => {
     return get().books.find(book => book.id === id);
+  },
+
+  getBookByISBN: (isbn: string) => {
+    const cleanIsbn = isbn.replace(/[-\s]/g, '');
+    if (!cleanIsbn) return undefined;
+    return get().books.find(book => {
+      const bookIsbn = book.isbn?.replace(/[-\s]/g, '');
+      return bookIsbn === cleanIsbn;
+    });
   },
 
   getBooksByStatus: (status: BookStatus) => {

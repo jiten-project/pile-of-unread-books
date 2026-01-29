@@ -11,6 +11,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { useTheme } from '../contexts';
+import { DEVICE } from '../constants';
 
 interface DateInputProps {
   label: string;
@@ -30,11 +31,33 @@ export default function DateInput({
   const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
 
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    container: { marginBottom: 20 },
+    label: { fontSize: 18, marginBottom: 10 },
+    input: { paddingHorizontal: 16, paddingVertical: 16, borderRadius: 12 },
+    inputText: { fontSize: 20 },
+    modalHeader: { padding: 20 },
+    modalTitle: { fontSize: 20 },
+    modalButton: { fontSize: 20 },
+    picker: { height: 260 },
+  } : {};
+
   // YYYY-MM-DD形式からDateオブジェクトに変換
+  // 不完全な形式（YYYY-MM や YYYY のみ）にも対応
   const parseDate = (dateStr: string): Date => {
     if (!dateStr) return new Date();
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
+    const parts = dateStr.split('-').map(Number);
+    const year = parts[0] || new Date().getFullYear();
+    const month = (parts[1] || 1) - 1; // 月は0始まり、デフォルトは1月
+    const day = parts[2] || 1; // 日がない場合は1日
+
+    // 無効な日付の場合は現在日付を返す
+    const date = new Date(year, month, day);
+    if (isNaN(date.getTime())) {
+      return new Date();
+    }
+    return date;
   };
 
   // DateオブジェクトからYYYY-MM-DD形式に変換
@@ -76,8 +99,8 @@ export default function DateInput({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>
+    <View style={[styles.container, tabletStyles.container]}>
+      <Text style={[styles.label, { color: colors.textSecondary }, tabletStyles.label]}>
         {label}
         {required && <Text style={styles.required}> *</Text>}
       </Text>
@@ -89,6 +112,7 @@ export default function DateInput({
             borderColor: colors.border,
             backgroundColor: colors.surface,
           },
+          tabletStyles.input,
         ]}
         onPress={() => setShowPicker(true)}
       >
@@ -98,6 +122,7 @@ export default function DateInput({
             {
               color: value ? colors.textPrimary : colors.textTertiary,
             },
+            tabletStyles.inputText,
           ]}
         >
           {value ? formatDisplayDate(value) : placeholder}
@@ -119,18 +144,19 @@ export default function DateInput({
                 style={[
                   styles.modalHeader,
                   { borderBottomColor: colors.border },
+                  tabletStyles.modalHeader,
                 ]}
               >
                 <TouchableOpacity onPress={handleClear}>
-                  <Text style={[styles.modalButton, { color: colors.error }]}>
+                  <Text style={[styles.modalButton, { color: colors.error }, tabletStyles.modalButton]}>
                     クリア
                   </Text>
                 </TouchableOpacity>
-                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }, tabletStyles.modalTitle]}>
                   {label}
                 </Text>
                 <TouchableOpacity onPress={handleConfirm}>
-                  <Text style={[styles.modalButton, { color: colors.primary }]}>
+                  <Text style={[styles.modalButton, { color: colors.primary }, tabletStyles.modalButton]}>
                     完了
                   </Text>
                 </TouchableOpacity>
@@ -141,7 +167,7 @@ export default function DateInput({
                 display="spinner"
                 onChange={handleChange}
                 locale="ja-JP"
-                style={styles.picker}
+                style={[styles.picker, tabletStyles.picker]}
               />
             </View>
           </View>

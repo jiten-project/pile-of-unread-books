@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BookStatus } from '../types';
+import { logError } from '../utils/logger';
 
 // 積読の定義設定
 export interface TsundokuDefinition {
@@ -90,7 +91,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         setShowReleasedState(JSON.parse(savedShowReleased));
       }
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      logError('settings:load', error);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +102,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       await AsyncStorage.setItem(TSUNDOKU_DEFINITION_KEY, JSON.stringify(definition));
       setTsundokuDefinitionState(definition);
     } catch (error) {
-      console.error('Failed to save tsundoku definition:', error);
+      logError('settings:saveTsundokuDef', error);
     }
   };
 
@@ -110,7 +111,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       await AsyncStorage.setItem(SHOW_WISHLIST_KEY, JSON.stringify(show));
       setShowWishlistState(show);
     } catch (error) {
-      console.error('Failed to save show wishlist setting:', error);
+      logError('settings:saveWishlist', error);
     }
   };
 
@@ -119,7 +120,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       await AsyncStorage.setItem(SHOW_RELEASED_KEY, JSON.stringify(show));
       setShowReleasedState(show);
     } catch (error) {
-      console.error('Failed to save show released setting:', error);
+      logError('settings:saveReleased', error);
     }
   };
 

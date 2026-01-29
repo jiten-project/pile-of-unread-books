@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { initDatabase, getAllBooks, insertBook, updateBook, deleteBook, updateSyncStatus } from '../services/database';
 import { deleteBookWithSync } from '../services/syncService';
+import { fetchThumbnailByISBN } from '../services/bookApi';
 import { useBookStore } from '../store';
 import { Book, SyncStatus } from '../types';
 import { useAuth } from '../contexts';
 import { SUBSCRIPTION } from '../constants';
+import { logError } from '../utils/logger';
 
 export function useDatabase() {
   const [isReady, setIsReady] = useState(false);
@@ -19,7 +21,7 @@ export function useDatabase() {
         setBooks(books);
         setIsReady(true);
       } catch (error) {
-        console.error('Failed to initialize database:', error);
+        logError('database:init', error);
         setError('データベースの初期化に失敗しました');
       } finally {
         setLoading(false);
@@ -36,8 +38,36 @@ export function usePersistBook() {
   const store = useBookStore();
   const { user } = useAuth();
 
-  const addBookWithPersist = useCallback(async (input: Parameters<typeof store.addBook>[0]) => {
-    const book = store.addBook(input);
+  const addBookWithPersist = useCallback(async (input: Parameters<typeof store.addBook>[0]): Promise<{ success: true; book: Book } | { success: false; error: 'duplicate'; existingBook: Book }> => {
+    const isbn = input.isbn?.trim();
+
+    // ISBN重複チェック
+    if (isbn) {
+      const existingBook = store.getBookByISBN(isbn);
+      if (existingBook) {
+        console.log('Duplicate ISBN detected:', isbn);
+        return { success: false, error: 'duplicate', existingBook };
+      }
+    }
+
+    // ISBNがあり画像がない場合、先に画像を取得
+    let thumbnailUrl = input.thumbnailUrl;
+    if (!thumbnailUrl && isbn) {
+      try {
+        console.log('Auto-fetching thumbnail for ISBN:', isbn);
+        const fetchedThumbnail = await fetchThumbnailByISBN(isbn);
+        if (fetchedThumbnail) {
+          thumbnailUrl = fetchedThumbnail;
+          console.log('Thumbnail fetched:', fetchedThumbnail);
+        } else {
+          console.log('No thumbnail found for ISBN:', isbn);
+        }
+      } catch (error) {
+        logError('database:autoFetchThumbnail', error);
+      }
+    }
+
+    const book = store.addBook({ ...input, thumbnailUrl });
 
     // 同期ステータスの判定
     let syncStatus: SyncStatus | undefined;
@@ -64,11 +94,39 @@ export function usePersistBook() {
       ownerUserId: user?.id,
     };
     await insertBook(bookWithSync);
-    return book;
+    return { success: true, book };
   }, [store, user]);
 
   const updateBookWithPersist = useCallback(async (id: string, input: Parameters<typeof store.updateBook>[1]) => {
-    store.updateBook(id, input);
+    // 既存の本を取得
+    const existingBook = store.getBookById(id);
+
+    // ISBNがあり画像がない場合（または新しくISBNが設定された場合）、画像を取得
+    let thumbnailUrl = input.thumbnailUrl;
+    const isbn = (input.isbn || existingBook?.isbn)?.trim();
+    // 空文字も「画像なし」として扱う
+    const currentThumbnail = input.thumbnailUrl || existingBook?.thumbnailUrl;
+
+    console.log('updateBook - isbn:', isbn, 'currentThumbnail:', currentThumbnail);
+
+    if (!currentThumbnail && isbn) {
+      try {
+        console.log('Auto-fetching thumbnail for ISBN:', isbn);
+        const fetchedThumbnail = await fetchThumbnailByISBN(isbn);
+        if (fetchedThumbnail) {
+          thumbnailUrl = fetchedThumbnail;
+          console.log('Thumbnail fetched:', fetchedThumbnail);
+        } else {
+          console.log('No thumbnail found for ISBN:', isbn);
+        }
+      } catch (error) {
+        logError('database:autoFetchThumbnail', error);
+      }
+    }
+
+    // 既存のサムネイルを保持（inputで明示的にundefinedが渡されない限り）
+    const finalThumbnail = thumbnailUrl ?? existingBook?.thumbnailUrl;
+    store.updateBook(id, { ...input, thumbnailUrl: finalThumbnail });
     const updatedBook = store.getBookById(id);
     if (updatedBook) {
       await updateBook(updatedBook);

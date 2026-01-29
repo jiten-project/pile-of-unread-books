@@ -263,37 +263,26 @@
 
   <main class="container">
     <section class="card">
-      <h2>バージョン 1.2.0 アップデート</h2>
+      <h2>バージョン 1.3.0 アップデート</h2>
       <div class="update-notes">
-        <h3>✨ 新機能</h3>
-        <ul>
-          <li><strong>本棚の並び替えに「積読期間」を追加</strong> - 積読が長い本を見つけやすくなりました</li>
-          <li><strong>昇順・降順の選択UI</strong> - 並び順を視覚的に選択できるようになりました</li>
-          <li><strong>ステータス「解放」を追加</strong> - 手放した本を記録できるようになりました</li>
-          <li><strong>ステータス「ほしい」を追加</strong> - 欲しい本をウィッシュリストとして管理できるようになりました</li>
-          <li><strong>ステータス表示設定</strong> - 「ほしい」「解放」ステータスの表示/非表示を設定で切り替え可能に</li>
-          <li><strong>iPad対応レイアウト</strong> - iPadでの表示を最適化し、より多くの情報を一画面に表示</li>
-          <li><strong>バージョンアップ通知</strong> - 新機能をお知らせするモーダルを追加</li>
-        </ul>
-      </div>
-      <div class="update-notes" style="background: #fff3e0;">
         <h3>🔧 改善</h3>
         <ul>
-          <li>ホーム画面に「未読」ステータスカードを追加</li>
-          <li>積読期間の算出が設定の積読定義に連動</li>
-          <li>ステータス表示設定をOFFにすると、該当ステータスの本が自動的に「未読」に変更されます</li>
-          <li>iPadでの本カードの表示サイズを最適化</li>
-          <li>iPadでのテキストサイズを見やすく調整</li>
-          <li>統計カードがiPadで1行に収まるよう動的に幅を調整</li>
-          <li>同期処理のパフォーマンスを改善</li>
-          <li>クラウド同期上限を50冊に変更</li>
+          <li><strong>ホーム画面に積読金額・積読ページを表示</strong> - 積読本の購入総額とページ数を一目で確認</li>
+          <li><strong>App Storeアップデート通知</strong> - 新バージョンがある場合にお知らせ</li>
+          <li><strong>iPadの画面全体を最適化</strong> - ナビゲーションバーとホーム画面のフォントを拡大</li>
+          <li><strong>ホーム画面のレイアウトを改善</strong> - 統計情報をより見やすく再配置</li>
+          <li><strong>設定画面のセクション順序を変更</strong> - 「積読の定義」を一番上に配置</li>
+          <li><strong>フィルターのデフォルト設定を改善</strong> - 並び替えのデフォルトを「積読期間」に変更</li>
+          <li><strong>購入日でのソート機能を追加</strong> - 本棚で購入日順に並べ替えが可能に</li>
         </ul>
       </div>
       <div class="update-notes" style="background: #e3f2fd;">
         <h3>🐛 バグ修正</h3>
         <ul>
-          <li>同期冊数のカウントに関する問題を修正</li>
-          <li>ローカルのみの本が同期対象から外れる問題を修正</li>
+          <li>iPadで統計画面の期間切り替え時にチャートが更新されない問題を修正</li>
+          <li>購入日のタイムゾーン処理に関する問題を修正</li>
+          <li>ISBN重複時の警告表示を追加</li>
+          <li>同期カウントの計算に関する問題を修正</li>
         </ul>
       </div>
       <p style="color: #666; font-size: 14px; margin-top: 15px;">
@@ -308,7 +297,7 @@
         <div class="feature-item">
           <div class="icon">📷</div>
           <h3>バーコードスキャン</h3>
-          <p>ISBNをスキャンして書籍情報を自動取得</p>
+          <p>ISBNをスキャンして書籍情報を自動取得<sup>※</sup></p>
         </div>
         <div class="feature-item">
           <div class="icon">📖</div>
@@ -335,17 +324,20 @@
           <h3>Apple ID連携</h3>
           <p>安全で簡単なサインイン</p>
         </div>
-        <div class="feature-item new">
+        <div class="feature-item">
           <div class="icon">💕</div>
           <h3>ほしい本リスト</h3>
           <p>気になる本をウィッシュリストで管理</p>
         </div>
-        <div class="feature-item new">
+        <div class="feature-item">
           <div class="icon">📱</div>
           <h3>iPad対応</h3>
           <p>大画面に最適化されたレイアウト</p>
         </div>
       </div>
+      <p style="color: #888; font-size: 12px; margin-top: 20px;">
+        ※ 書籍情報（ページ数、定価等）は外部API（OpenBD、Google Books）から取得されます。API提供元のデータに依存するため、実際の書籍と異なる場合やデータがない場合があります。情報に誤りがある場合は登録後に編集できます。
+      </p>
     </section>
 
     <section class="card">
@@ -408,7 +400,7 @@
       <table style="width: 100%; font-size: 14px;">
         <tr>
           <td style="padding: 10px 0; color: #666;">バージョン</td>
-          <td style="padding: 10px 0; text-align: right;">1.2.0</td>
+          <td style="padding: 10px 0; text-align: right;">1.3.0</td>
         </tr>
         <tr>
           <td style="padding: 10px 0; color: #666;">対応OS</td>

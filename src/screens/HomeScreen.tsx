@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, DimensionValue } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
 import { BookCard, EmptyState } from '../components';
@@ -43,7 +43,7 @@ export default function HomeScreen() {
   const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
 
   // 積読統計（カスタムフックで一元管理）
-  const { tsundokuCount, tsundokuSpent, oldestTsundoku } = useTsundokuStats();
+  const { tsundokuCount, tsundokuSpent, tsundokuPages, oldestTsundoku } = useTsundokuStats();
 
   // ランダムメッセージ（1分ごとに更新）
   const [randomMessage, setRandomMessage] = useState('');
@@ -63,25 +63,30 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // ステータス別カウント
-  const statusCounts = useMemo(() => {
-    return {
-      wishlist: books.filter(b => b.status === 'wishlist').length,
-      unread: books.filter(b => b.status === 'unread').length,
-      reading: books.filter(b => b.status === 'reading').length,
-      completed: books.filter(b => b.status === 'completed').length,
-      paused: books.filter(b => b.status === 'paused').length,
-      released: books.filter(b => b.status === 'released').length,
+  // ステータス別カウントと読書中の本を1パスで集計
+  const { statusCounts, readingBooks } = useMemo(() => {
+    const counts = {
+      wishlist: 0,
+      unread: 0,
+      reading: 0,
+      completed: 0,
+      paused: 0,
+      released: 0,
     };
+    const reading: typeof books = [];
+
+    for (const book of books) {
+      counts[book.status]++;
+      if (book.status === 'reading' && reading.length < 3) {
+        reading.push(book);
+      }
+    }
+
+    return { statusCounts: counts, readingBooks: reading };
   }, [books]);
 
-  const readingBooks = useMemo(
-    () => books.filter(b => b.status === 'reading').slice(0, 3),
-    [books]
-  );
-
   // iPadでの統計カードの幅を動的に計算（表示数に応じて調整）
-  const statCardWidth = useMemo(() => {
+  const statCardWidth = useMemo((): DimensionValue => {
     if (!DEVICE.isTablet) return '48.5%'; // iPhoneは2列固定
     // 基本4個 + released + wishlist
     const count = 4 + (showReleasedInBookshelf ? 1 : 0) + (showWishlistInBookshelf ? 1 : 0);
@@ -109,7 +114,6 @@ export default function HomeScreen() {
       },
       priceLabel: { color: colors.warning },
       priceValue: { color: colors.warning },
-      priceHint: { color: colors.warning + 'CC' },
     }),
     [colors]
   );
@@ -122,13 +126,38 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={[styles.greeting, themedStyles.greeting]}>積読生活</Text>
         {randomMessage && (
-          <Text style={[styles.quoteText, { color: colors.textTertiary }]}>
+          <Text
+            style={[styles.quoteText, { color: colors.textTertiary }]}
+            numberOfLines={2}
+          >
             {randomMessage}
           </Text>
         )}
       </View>
 
-      {/* 積読カウントと購入総額（iPadでは横並び） */}
+      {/* iPhoneでは積読金額・ページ数を先に表示 */}
+      {!DEVICE.isTablet && (tsundokuSpent > 0 || tsundokuPages > 0) && (
+        <View style={styles.summaryRow}>
+          {tsundokuSpent > 0 && (
+            <View style={[styles.summaryCard, themedStyles.priceCard]}>
+              <Text style={[styles.summaryLabel, themedStyles.priceLabel]}>積読金額</Text>
+              <Text style={[styles.summaryValue, themedStyles.priceValue]}>
+                {formatPrice(tsundokuSpent)}
+              </Text>
+            </View>
+          )}
+          {tsundokuPages > 0 && (
+            <View style={[styles.summaryCard, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40' }]}>
+              <Text style={[styles.summaryLabel, { color: colors.primary }]}>積読ページ</Text>
+              <Text style={[styles.summaryValue, { color: colors.primary }]}>
+                {tsundokuPages.toLocaleString()}頁
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* 積読カウントと積読金額（iPadでは横並び） */}
       <View style={styles.tsundokuRow}>
         <View style={[styles.tsundokuCard, { backgroundColor: colors.surface }]}>
           <View style={styles.tsundokuHeader}>
@@ -145,91 +174,46 @@ export default function HomeScreen() {
 
         {DEVICE.isTablet && tsundokuSpent > 0 && (
           <View style={[styles.tsundokuCard, styles.priceCardInRow, themedStyles.priceCard]}>
-            <Text style={[styles.priceLabel, themedStyles.priceLabel]}>積読本の購入総額</Text>
+            <Text style={[styles.priceLabel, themedStyles.priceLabel]}>積読金額</Text>
             <Text style={[styles.priceValue, themedStyles.priceValue]}>
               {formatPrice(tsundokuSpent)}
             </Text>
-            <Text style={[styles.priceHint, themedStyles.priceHint]}>読むと元が取れます！</Text>
+          </View>
+        )}
+        {DEVICE.isTablet && tsundokuPages > 0 && (
+          <View style={[styles.tsundokuCard, styles.priceCardInRow, { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40' }]}>
+            <Text style={[styles.priceLabel, { color: colors.primary }]}>積読ページ</Text>
+            <Text style={[styles.priceValue, { color: colors.primary }]}>
+              {tsundokuPages.toLocaleString()}頁
+            </Text>
           </View>
         )}
       </View>
 
       <View style={styles.statsGrid}>
-        <StatCard
-          label={STATUS_LABELS.unread}
-          value={statusCounts.unread}
-          color={STATUS_COLORS.unread}
-          icon="📚"
-          cardBgColor={colors.surface}
-          textColor={colors.textPrimary}
-          labelColor={colors.textSecondary}
-          cardWidth={statCardWidth}
-        />
-        <StatCard
-          label={STATUS_LABELS.reading}
-          value={statusCounts.reading}
-          color={STATUS_COLORS.reading}
-          icon="📖"
-          cardBgColor={colors.surface}
-          textColor={colors.textPrimary}
-          labelColor={colors.textSecondary}
-          cardWidth={statCardWidth}
-        />
-        <StatCard
-          label={STATUS_LABELS.paused}
-          value={statusCounts.paused}
-          color={STATUS_COLORS.paused}
-          icon="⏸️"
-          cardBgColor={colors.surface}
-          textColor={colors.textPrimary}
-          labelColor={colors.textSecondary}
-          cardWidth={statCardWidth}
-        />
-        <StatCard
-          label={STATUS_LABELS.completed}
-          value={statusCounts.completed}
-          color={STATUS_COLORS.completed}
-          icon="✅"
-          cardBgColor={colors.surface}
-          textColor={colors.textPrimary}
-          labelColor={colors.textSecondary}
-          cardWidth={statCardWidth}
-        />
-        {showReleasedInBookshelf && (
-          <StatCard
-            label={STATUS_LABELS.released}
-            value={statusCounts.released}
-            color={STATUS_COLORS.released}
-            icon="🕊️"
-            cardBgColor={colors.surface}
-            textColor={colors.textPrimary}
-            labelColor={colors.textSecondary}
-            cardWidth={statCardWidth}
-          />
-        )}
-        {showWishlistInBookshelf && (
-          <StatCard
-            label={STATUS_LABELS.wishlist}
-            value={statusCounts.wishlist}
-            color={STATUS_COLORS.wishlist}
-            icon="💕"
-            cardBgColor={colors.surface}
-            textColor={colors.textPrimary}
-            labelColor={colors.textSecondary}
-            cardWidth={statCardWidth}
-          />
-        )}
+        {[
+          { key: 'unread', icon: '📚', show: true },
+          { key: 'reading', icon: '📖', show: true },
+          { key: 'paused', icon: '⏸️', show: true },
+          { key: 'completed', icon: '✅', show: true },
+          { key: 'released', icon: '🕊️', show: showReleasedInBookshelf },
+          { key: 'wishlist', icon: '💕', show: showWishlistInBookshelf },
+        ]
+          .filter(item => item.show)
+          .map(item => (
+            <StatCard
+              key={item.key}
+              label={STATUS_LABELS[item.key as keyof typeof STATUS_LABELS]}
+              value={statusCounts[item.key as keyof typeof statusCounts]}
+              color={STATUS_COLORS[item.key as keyof typeof STATUS_COLORS]}
+              icon={item.icon}
+              cardBgColor={colors.surface}
+              textColor={colors.textPrimary}
+              labelColor={colors.textSecondary}
+              cardWidth={statCardWidth}
+            />
+          ))}
       </View>
-
-      {!DEVICE.isTablet && tsundokuSpent > 0 && (
-        <View style={[styles.priceCard, themedStyles.priceCard]}>
-          <Text style={[styles.priceLabel, themedStyles.priceLabel]}>積読本の購入総額</Text>
-          <Text style={[styles.priceValue, themedStyles.priceValue]}>
-            {formatPrice(tsundokuSpent)}
-          </Text>
-          <Text style={[styles.priceHint, themedStyles.priceHint]}>読むと元が取れます！</Text>
-        </View>
-      )}
 
       {oldestTsundoku && (
         <View style={styles.section}>
@@ -279,12 +263,12 @@ interface StatCardProps {
   cardBgColor: string;
   textColor: string;
   labelColor: string;
-  cardWidth?: string;
+  cardWidth?: DimensionValue;
 }
 
 function StatCard({ label, value, color, icon, cardBgColor, textColor, labelColor, cardWidth }: StatCardProps) {
   return (
-    <View style={[styles.statCard, { borderLeftColor: color, backgroundColor: cardBgColor, width: cardWidth as any }]}>
+    <View style={[styles.statCard, { borderLeftColor: color, backgroundColor: cardBgColor, width: cardWidth }]}>
       <Text style={styles.statIcon}>{icon}</Text>
       <Text style={[styles.statValue, { color: textColor }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: labelColor }]}>{label}</Text>
@@ -301,7 +285,10 @@ const styles = StyleSheet.create({
     paddingBottom: DEVICE.isTablet ? 24 : 40,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: DEVICE.isTablet ? 16 : 20,
+    gap: 12,
   },
   tsundokuRow: {
     flexDirection: DEVICE.isTablet ? 'row' : 'column',
@@ -309,7 +296,7 @@ const styles = StyleSheet.create({
     marginBottom: DEVICE.isTablet ? 12 : 0,
   },
   greeting: {
-    fontSize: DEVICE.isTablet ? 34 : 28,
+    fontSize: DEVICE.isTablet ? 40 : 28,
     fontWeight: 'bold',
   },
   total: {
@@ -317,10 +304,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   quoteText: {
-    fontSize: DEVICE.isTablet ? 20 : 16,
+    flexShrink: 1,
+    fontSize: DEVICE.isTablet ? 18 : 13,
     fontStyle: 'italic',
-    marginTop: 12,
-    lineHeight: DEVICE.isTablet ? 30 : 24,
+    lineHeight: DEVICE.isTablet ? 26 : 18,
   },
   tsundokuCard: {
     flex: DEVICE.isTablet ? 1 : undefined,
@@ -336,6 +323,7 @@ const styles = StyleSheet.create({
   },
   priceCardInRow: {
     borderWidth: 1,
+    justifyContent: 'center',
   },
   tsundokuHeader: {
     flexDirection: 'row',
@@ -397,21 +385,41 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: DEVICE.isTablet ? 18 : 14,
+    textAlign: 'center',
   },
   priceValue: {
     fontSize: DEVICE.isTablet ? 34 : 28,
     fontWeight: 'bold',
     marginTop: 4,
+    textAlign: 'center',
   },
-  priceHint: {
-    fontSize: DEVICE.isTablet ? 15 : 12,
+  summaryRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  summaryCard: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  summaryLabel: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginTop: 4,
+    textAlign: 'center',
   },
   section: {
     marginBottom: DEVICE.isTablet ? 14 : 20,
   },
   sectionTitle: {
-    fontSize: DEVICE.isTablet ? 22 : 18,
+    fontSize: DEVICE.isTablet ? 26 : 18,
     fontWeight: 'bold',
     marginBottom: DEVICE.isTablet ? 14 : 12,
   },

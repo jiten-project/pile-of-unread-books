@@ -1,4 +1,5 @@
 import { Book } from '../types';
+import { logWarn } from '../utils/logger';
 import {
   getAllBooks,
   getBooksNeedingSync,
@@ -381,7 +382,7 @@ export async function deleteBookWithSync(bookId: string): Promise<void> {
   } catch (error) {
     // クラウド削除失敗 → pending_delete のまま保持
     // 次回の同期で再試行される
-    console.warn('Failed to delete book from cloud, will retry on next sync:', error);
+    logWarn('sync:deleteFromCloud', 'Failed to delete book from cloud, will retry on next sync');
     return;
   }
 
@@ -391,7 +392,7 @@ export async function deleteBookWithSync(bookId: string): Promise<void> {
   } catch (error) {
     // ローカル削除失敗は致命的ではない（クラウドは既に削除済み）
     // 次回同期でも再試行されるが、クラウドにないので問題なし
-    console.warn('Failed to hard delete book locally:', error);
+    logWarn('sync:hardDeleteLocal', 'Failed to hard delete book locally');
   }
 }
 

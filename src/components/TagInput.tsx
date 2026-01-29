@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from '../contexts';
+import { DEVICE } from '../constants';
 
 interface TagInputProps {
   label: string;
@@ -17,6 +18,21 @@ interface TagInputProps {
 export default function TagInput({ label, tags, onChange }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const { colors } = useTheme();
+
+  // iPad用の拡大スタイル
+  const tabletStyles = DEVICE.isTablet ? {
+    container: { marginBottom: 20 },
+    label: { fontSize: 18, marginBottom: 10 },
+    inputRow: { gap: 12 },
+    input: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 20, borderRadius: 12 },
+    addButton: { paddingHorizontal: 24, borderRadius: 12 },
+    addButtonText: { fontSize: 18 },
+    tagsContainer: { gap: 12, marginTop: 12 },
+    tag: { paddingLeft: 16, paddingRight: 8, paddingVertical: 10, borderRadius: 24, minHeight: 48 },
+    tagText: { fontSize: 18 },
+    removeButton: { marginLeft: 10, width: 32, height: 32, borderRadius: 16 },
+    removeButtonText: { fontSize: 20 },
+  } : {};
 
   const addTag = () => {
     const trimmed = inputValue.trim();
@@ -31,9 +47,9 @@ export default function TagInput({ label, tags, onChange }: TagInputProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>
-      <View style={styles.inputRow}>
+    <View style={[styles.container, tabletStyles.container]}>
+      <Text style={[styles.label, { color: colors.textPrimary }, tabletStyles.label]}>{label}</Text>
+      <View style={[styles.inputRow, tabletStyles.inputRow]}>
         <TextInput
           style={[
             styles.input,
@@ -42,6 +58,7 @@ export default function TagInput({ label, tags, onChange }: TagInputProps) {
               backgroundColor: colors.surface,
               color: colors.textPrimary,
             },
+            tabletStyles.input,
           ]}
           value={inputValue}
           onChangeText={setInputValue}
@@ -52,29 +69,29 @@ export default function TagInput({ label, tags, onChange }: TagInputProps) {
           accessibilityLabel="タグ入力欄"
         />
         <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: colors.primary }]}
+          style={[styles.addButton, { backgroundColor: colors.primary }, tabletStyles.addButton]}
           onPress={addTag}
           accessibilityLabel="タグを追加"
           accessibilityRole="button"
         >
-          <Text style={styles.addButtonText}>追加</Text>
+          <Text style={[styles.addButtonText, tabletStyles.addButtonText]}>追加</Text>
         </TouchableOpacity>
       </View>
       {tags.length > 0 && (
-        <View style={styles.tagsContainer}>
+        <View style={[styles.tagsContainer, tabletStyles.tagsContainer]}>
           {tags.map(tag => (
             <View
               key={tag}
-              style={[styles.tag, { backgroundColor: colors.primaryLight }]}
+              style={[styles.tag, { backgroundColor: colors.primaryLight }, tabletStyles.tag]}
             >
-              <Text style={[styles.tagText, { color: colors.primary }]}>{tag}</Text>
+              <Text style={[styles.tagText, { color: colors.primary }, tabletStyles.tagText]}>{tag}</Text>
               <TouchableOpacity
                 onPress={() => removeTag(tag)}
-                style={[styles.removeButton, { backgroundColor: colors.primary }]}
+                style={[styles.removeButton, { backgroundColor: colors.primary }, tabletStyles.removeButton]}
                 accessibilityLabel={`${tag}を削除`}
                 accessibilityRole="button"
               >
-                <Text style={styles.removeButtonText}>×</Text>
+                <Text style={[styles.removeButtonText, tabletStyles.removeButtonText]}>×</Text>
               </TouchableOpacity>
             </View>
           ))}

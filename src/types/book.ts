@@ -23,6 +23,7 @@ export interface BookInfo {
   pageCount?: number;
   thumbnailUrl?: string;
   categories?: string[];
+  listPrice?: number; // 定価（APIから取得）
 }
 
 // ユーザーが入力する情報

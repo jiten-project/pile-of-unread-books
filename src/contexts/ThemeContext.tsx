@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logError } from '../utils/logger';
 
 // テーマの種類
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -114,7 +115,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         setThemeModeState(savedMode as ThemeMode);
       }
     } catch (error) {
-      console.error('Failed to load theme mode:', error);
+      logError('theme:load', error);
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +126,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
       setThemeModeState(mode);
     } catch (error) {
-      console.error('Failed to save theme mode:', error);
+      logError('theme:save', error);
     }
   };
 

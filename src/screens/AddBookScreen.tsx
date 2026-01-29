@@ -16,12 +16,15 @@ import { BookStatus, Priority, BookCondition, RootStackNavigationProp } from '..
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS } from '../constants';
 import { useTheme } from '../contexts';
 import { parsePrice } from '../utils';
+import { logError } from '../utils/logger';
 
 interface FormData {
   title: string;
   authors: string;
   publisher: string;
   isbn: string;
+  pageCount: string;
+  publishedDate: string;
   status: BookStatus;
   priority: Priority;
   condition: BookCondition;
@@ -43,6 +46,8 @@ const initialFormData: FormData = {
   authors: '',
   publisher: '',
   isbn: '',
+  pageCount: '',
+  publishedDate: '',
   status: 'unread',
   priority: 'medium',
   condition: 'new',
@@ -123,11 +128,14 @@ export default function AddBookScreen() {
 
     setIsSubmitting(true);
     try {
-      await addBook({
+      const pageCountNum = formData.pageCount.trim() ? parseInt(formData.pageCount, 10) : undefined;
+      const result = await addBook({
         title: formData.title.trim(),
         authors: formData.authors.split(',').map(a => a.trim()).filter(Boolean),
         publisher: formData.publisher.trim() || undefined,
         isbn: formData.isbn.trim() || undefined,
+        pageCount: pageCountNum && !isNaN(pageCountNum) && pageCountNum > 0 ? pageCountNum : undefined,
+        publishedDate: formData.publishedDate.trim() || undefined,
         status: formData.status,
         priority: formData.priority,
         condition: formData.condition,
@@ -135,11 +143,21 @@ export default function AddBookScreen() {
         purchasePrice: parsePrice(formData.purchasePrice),
         purchaseReason: formData.purchaseReason.trim() || undefined,
         purchaseDate: formData.purchaseDate
-          ? new Date(formData.purchaseDate + 'T00:00:00').toISOString()
+          ? formData.purchaseDate + 'T12:00:00.000Z'
           : new Date().toISOString(),
         tags: formData.tags,
         notes: formData.notes.trim() || undefined,
       });
+
+      if (!result.success) {
+        if (result.error === 'duplicate') {
+          Alert.alert(
+            '登録済みの本です',
+            `同じISBNの本「${result.existingBook.title}」が既に登録されています`
+          );
+          return;
+        }
+      }
 
       Alert.alert('登録完了', `「${formData.title}」を登録しました`, [
         {
@@ -149,7 +167,7 @@ export default function AddBookScreen() {
       ]);
     } catch (error) {
       Alert.alert('エラー', '登録に失敗しました');
-      console.error(error);
+      logError('addBook', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -170,7 +188,7 @@ export default function AddBookScreen() {
           >
             <Text style={styles.quickActionIcon}>📷</Text>
             <Text style={[styles.quickActionText, themedStyles.quickActionText]}>
-              バーコード{'\n'}スキャン
+              バーコード
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -179,9 +197,20 @@ export default function AddBookScreen() {
             accessibilityLabel="ISBN検索で本を追加"
             accessibilityRole="button"
           >
-            <Text style={styles.quickActionIcon}>🔍</Text>
+            <Text style={styles.quickActionIcon}>🔢</Text>
             <Text style={[styles.quickActionText, themedStyles.quickActionText]}>
-              ISBN{'\n'}検索
+              ISBN
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.quickActionButton, themedStyles.quickActionButton]}
+            onPress={() => navigation.navigate('TitleSearch')}
+            accessibilityLabel="タイトル検索で本を追加"
+            accessibilityRole="button"
+          >
+            <Text style={styles.quickActionIcon}>📚</Text>
+            <Text style={[styles.quickActionText, themedStyles.quickActionText]}>
+              タイトル
             </Text>
           </TouchableOpacity>
         </View>
@@ -225,6 +254,21 @@ export default function AddBookScreen() {
           onChangeText={v => updateField('isbn', v)}
           placeholder="ISBN-13 または ISBN-10"
           keyboardType="numeric"
+        />
+
+        <FormInput
+          label="ページ数"
+          value={formData.pageCount}
+          onChangeText={v => updateField('pageCount', v)}
+          placeholder="ページ数"
+          keyboardType="numeric"
+        />
+
+        <FormInput
+          label="発売日"
+          value={formData.publishedDate}
+          onChangeText={v => updateField('publishedDate', v)}
+          placeholder="例: 2024-01-15 または 2024年1月"
         />
 
         <Text style={[styles.sectionTitle, themedStyles.sectionTitle]}>ステータス</Text>
@@ -341,7 +385,7 @@ const styles = StyleSheet.create({
   quickActionButton: {
     flex: 1,
     borderRadius: 12,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -351,11 +395,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   quickActionIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 28,
+    marginBottom: 6,
   },
   quickActionText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },

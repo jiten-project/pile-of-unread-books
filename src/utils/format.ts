@@ -1,9 +1,60 @@
 /**
  * 日付文字列を日本語形式でフォーマット
+ * ISO形式（2024-01-15T00:00:00.000Z）やYYYY-MM-DD形式に対応
  */
 export function formatDate(dateString?: string): string {
   if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('ja-JP');
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${year}年${month}月${day}日`;
+}
+
+/**
+ * 出版日を日本語形式でフォーマット
+ * 様々な形式に対応: YYYYMMDD, YYYY-MM-DD, YYYY-MM, YYYY, 2024年1月 など
+ */
+export function formatPublishedDate(dateString?: string): string {
+  if (!dateString) return '-';
+
+  const str = dateString.trim();
+
+  // 既に日本語形式（2024年1月、2024年1月15日 など）
+  if (/^\d{4}年/.test(str)) {
+    return str;
+  }
+
+  // YYYYMMDD形式（20240115）
+  if (/^\d{8}$/.test(str)) {
+    const year = str.slice(0, 4);
+    const month = parseInt(str.slice(4, 6), 10);
+    const day = parseInt(str.slice(6, 8), 10);
+    return `${year}年${month}月${day}日`;
+  }
+
+  // YYYY-MM-DD または YYYY/MM/DD 形式
+  const fullMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (fullMatch) {
+    const [, year, month, day] = fullMatch;
+    return `${year}年${parseInt(month, 10)}月${parseInt(day, 10)}日`;
+  }
+
+  // YYYY-MM または YYYY/MM 形式
+  const monthMatch = str.match(/^(\d{4})[-/](\d{1,2})$/);
+  if (monthMatch) {
+    const [, year, month] = monthMatch;
+    return `${year}年${parseInt(month, 10)}月`;
+  }
+
+  // YYYY 形式
+  if (/^\d{4}$/.test(str)) {
+    return `${str}年`;
+  }
+
+  // その他はそのまま返す
+  return str;
 }
 
 /**

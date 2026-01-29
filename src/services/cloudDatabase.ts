@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { Book } from '../types';
+import { logError } from '../utils/logger';
 
 // Supabase の books テーブルの型（snake_case）
 interface SupabaseBook {
@@ -107,7 +108,7 @@ export async function fetchAllBooksFromCloud(): Promise<Book[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Failed to fetch books from cloud:', error);
+    logError('cloudDB:fetchBooks', error);
     throw error;
   }
 
@@ -125,7 +126,7 @@ export async function upsertBookToCloud(book: Book, ownerUserId: string): Promis
     .upsert(supabaseBook, { onConflict: 'id' });
 
   if (error) {
-    console.error('Failed to upsert book to cloud:', error);
+    logError('cloudDB:upsertBook', error);
     throw error;
   }
 }
@@ -143,7 +144,7 @@ export async function upsertBooksToCloud(books: Book[], ownerUserId: string): Pr
     .upsert(supabaseBooks, { onConflict: 'id' });
 
   if (error) {
-    console.error('Failed to upsert books to cloud:', error);
+    logError('cloudDB:upsertBooks', error);
     throw error;
   }
 }
@@ -158,7 +159,7 @@ export async function deleteBookFromCloud(bookId: string): Promise<void> {
     .eq('id', bookId);
 
   if (error) {
-    console.error('Failed to delete book from cloud:', error);
+    logError('cloudDB:deleteBook', error);
     throw error;
   }
 }
@@ -173,7 +174,7 @@ export async function deleteAllBooksFromCloud(): Promise<void> {
     .neq('id', '00000000-0000-0000-0000-000000000000'); // RLSにより自分の本のみ削除される
 
   if (error) {
-    console.error('Failed to delete all books from cloud:', error);
+    logError('cloudDB:deleteAllBooks', error);
     throw error;
   }
 }
@@ -189,7 +190,7 @@ export async function fetchBooksUpdatedSince(since: string): Promise<Book[]> {
     .order('updated_at', { ascending: true });
 
   if (error) {
-    console.error('Failed to fetch updated books from cloud:', error);
+    logError('cloudDB:fetchUpdatedBooks', error);
     throw error;
   }
 
@@ -205,7 +206,7 @@ export async function getCloudBookCount(): Promise<number> {
     .select('*', { count: 'exact', head: true });
 
   if (error) {
-    console.error('Failed to get cloud book count:', error);
+    logError('cloudDB:getBookCount', error);
     throw error;
   }
 
@@ -227,7 +228,7 @@ export async function fetchBookFromCloud(bookId: string): Promise<Book | null> {
       // Not found
       return null;
     }
-    console.error('Failed to fetch book from cloud:', error);
+    logError('cloudDB:fetchBook', error);
     throw error;
   }
 

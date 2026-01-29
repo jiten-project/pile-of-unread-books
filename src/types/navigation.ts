@@ -11,6 +11,7 @@ export type RootStackParamList = {
   BarcodeScan: undefined;
   BookConfirm: { bookInfo: BookInfo };
   ISBNSearch: undefined;
+  TitleSearch: undefined;
   NotificationSettings: undefined;
   TagManagement: undefined;
   TermsOfService: undefined;
