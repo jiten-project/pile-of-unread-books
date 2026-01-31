@@ -33,7 +33,7 @@ export default function PrivacyPolicyScreen() {
           本アプリは、以下の情報をユーザーのデバイス内に保存します。{'\n\n'}
           • 書籍情報（タイトル、著者、ISBN等）{'\n'}
           • 読書状況（ステータス、読書日時等）{'\n'}
-          • アプリ設定（テーマ、通知設定等）{'\n\n'}
+          • アプリ設定（テーマ等）{'\n\n'}
           クラウド同期を有効にした場合、上記の書籍情報はApple IDに紐づいたクラウドサーバー（Supabase）にも保存されます。これにより、複数デバイス間でデータを同期できます。
         </Text>
       </View>
@@ -75,15 +75,6 @@ export default function PrivacyPolicyScreen() {
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
           本アプリは、バーコードスキャン機能のためにカメラへのアクセスを要求する場合があります。カメラで取得した画像は、バーコード読み取りのためにのみ使用され、保存や外部送信は行われません。
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-          通知
-        </Text>
-        <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリは、読書リマインダー機能のためにローカル通知を使用する場合があります。通知はデバイス内で完結し、外部サーバーとの通信は行われません。
         </Text>
       </View>
 

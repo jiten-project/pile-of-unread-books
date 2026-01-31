@@ -13,7 +13,7 @@ import { useBookStore } from '../store';
 import { usePersistBook } from '../hooks';
 import { BookStatus, RootStackNavigationProp, BookDetailRouteProp } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS, DEVICE } from '../constants';
-import { formatDate, formatPrice, formatPublishedDate, joinWithComma } from '../utils';
+import { formatDate, formatPrice, formatPublishedDate, joinWithComma, getMaturityLevel, calculateTsundokuDays } from '../utils';
 import { useTheme, useSettings } from '../contexts';
 
 export default function BookDetailScreen() {
@@ -21,9 +21,9 @@ export default function BookDetailScreen() {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { bookId } = route.params;
   const { getBookById } = useBookStore();
-  const { updateStatus, deleteBook } = usePersistBook();
+  const { updateBook, updateStatus, deleteBook } = usePersistBook();
   const { colors } = useTheme();
-  const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
+  const { showWishlistInBookshelf, showReleasedInBookshelf, showMaturity, isTsundoku } = useSettings();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const book = getBookById(bookId);
@@ -88,6 +88,11 @@ export default function BookDetailScreen() {
     );
   }
 
+  // 熟成度の計算（積読本のみ）
+  const isBookTsundoku = isTsundoku(book.status);
+  const tsundokuDays = calculateTsundokuDays(book.purchaseDate, book.createdAt);
+  const maturityLevel = isBookTsundoku ? getMaturityLevel(tsundokuDays) : null;
+
   const handleStatusChange = async (newStatus: BookStatus) => {
     await updateStatus(book.id, newStatus);
   };
@@ -117,6 +122,24 @@ export default function BookDetailScreen() {
     );
   };
 
+  // 今日の日付をISO形式で取得
+  const getTodayISO = () => new Date().toISOString().split('T')[0];
+
+  // 購入日を今日に設定
+  const handleSetPurchaseDate = async () => {
+    await updateBook(book.id, { purchaseDate: getTodayISO() });
+  };
+
+  // 読書開始日を今日に設定
+  const handleSetStartDate = async () => {
+    await updateBook(book.id, { startDate: getTodayISO() });
+  };
+
+  // 読了日を今日に設定
+  const handleSetCompletedDate = async () => {
+    await updateBook(book.id, { completedDate: getTodayISO() });
+  };
+
   return (
     <ScrollView
       style={[styles.container, themedStyles.container]}
@@ -144,9 +167,21 @@ export default function BookDetailScreen() {
             <View style={[styles.badge, { backgroundColor: STATUS_COLORS[book.status] }, tabletStyles.badge]}>
               <Text style={[styles.badgeText, tabletStyles.badgeText]}>{STATUS_LABELS[book.status]}</Text>
             </View>
+            {isBookTsundoku && (
+              <View style={[styles.badge, { backgroundColor: '#E91E63' }, tabletStyles.badge]}>
+                <Text style={[styles.badgeText, tabletStyles.badgeText]}>{tsundokuDays}日</Text>
+              </View>
+            )}
             <View style={[styles.badge, { backgroundColor: PRIORITY_COLORS[book.priority] }, tabletStyles.badge]}>
               <Text style={[styles.badgeText, tabletStyles.badgeText]}>優先度: {PRIORITY_LABELS[book.priority]}</Text>
             </View>
+            {showMaturity && maturityLevel && (
+              <View style={[styles.maturityBadge, { backgroundColor: maturityLevel.color }, tabletStyles.badge]}>
+                <Text style={[styles.maturityBadgeText, tabletStyles.badgeText]}>
+                  {maturityLevel.icon} {maturityLevel.name}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -209,7 +244,20 @@ export default function BookDetailScreen() {
             <Text style={[styles.conditionBadgeText, tabletStyles.conditionBadgeText]}>{CONDITION_LABELS[book.condition]}</Text>
           </View>
         </View>
-        <InfoRow label="購入日" value={formatDate(book.purchaseDate)} colors={colors} tabletStyles={tabletStyles} />
+        <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }, tabletStyles.infoRow]}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }, tabletStyles.infoLabel]}>購入日</Text>
+          {book.purchaseDate ? (
+            <Text style={[styles.infoValue, { color: colors.textPrimary }, tabletStyles.infoValue]}>{formatDate(book.purchaseDate)}</Text>
+          ) : (
+            <TouchableOpacity
+              style={[styles.setDateButton, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
+              onPress={handleSetPurchaseDate}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.setDateButtonText, { color: colors.primary }]}>今日</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <InfoRow label="購入場所" value={book.purchasePlace || '-'} colors={colors} tabletStyles={tabletStyles} />
         <InfoRow label="購入価格" value={formatPrice(book.purchasePrice)} colors={colors} tabletStyles={tabletStyles} />
       </View>
@@ -237,8 +285,34 @@ export default function BookDetailScreen() {
       <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
         <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>記録</Text>
         <InfoRow label="登録日" value={formatDate(book.createdAt)} colors={colors} tabletStyles={tabletStyles} />
-        <InfoRow label="読書開始日" value={formatDate(book.startDate)} colors={colors} tabletStyles={tabletStyles} />
-        <InfoRow label="読了日" value={formatDate(book.completedDate)} colors={colors} tabletStyles={tabletStyles} />
+        <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }, tabletStyles.infoRow]}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }, tabletStyles.infoLabel]}>読書開始日</Text>
+          {book.startDate ? (
+            <Text style={[styles.infoValue, { color: colors.textPrimary }, tabletStyles.infoValue]}>{formatDate(book.startDate)}</Text>
+          ) : (
+            <TouchableOpacity
+              style={[styles.setDateButton, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
+              onPress={handleSetStartDate}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.setDateButtonText, { color: colors.primary }]}>今日</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={[styles.infoRow, { borderBottomColor: colors.borderLight }, tabletStyles.infoRow]}>
+          <Text style={[styles.infoLabel, { color: colors.textSecondary }, tabletStyles.infoLabel]}>読了日</Text>
+          {book.completedDate ? (
+            <Text style={[styles.infoValue, { color: colors.textPrimary }, tabletStyles.infoValue]}>{formatDate(book.completedDate)}</Text>
+          ) : (
+            <TouchableOpacity
+              style={[styles.setDateButton, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
+              onPress={handleSetCompletedDate}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.setDateButtonText, { color: colors.primary }]}>今日</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={[styles.actionButtons, tabletStyles.actionButtons]}>
@@ -358,6 +432,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  maturityBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  maturityBadgeText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
+  },
   section: {
     borderRadius: 12,
     padding: 16,
@@ -400,6 +484,16 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 14,
+  },
+  setDateButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  setDateButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   conditionBadge: {
     paddingHorizontal: 10,
