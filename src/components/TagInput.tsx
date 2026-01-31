@@ -13,11 +13,15 @@ interface TagInputProps {
   label: string;
   tags: string[];
   onChange: (tags: string[]) => void;
+  allTags?: string[]; // 既存タグ一覧（再利用用）
 }
 
-export default function TagInput({ label, tags, onChange }: TagInputProps) {
+export default function TagInput({ label, tags, onChange, allTags = [] }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const { colors } = useTheme();
+
+  // 選択されていない既存タグをフィルタ
+  const availableTags = allTags.filter(tag => !tags.includes(tag));
 
   // iPad用の拡大スタイル
   const tabletStyles = DEVICE.isTablet ? {
@@ -77,6 +81,28 @@ export default function TagInput({ label, tags, onChange }: TagInputProps) {
           <Text style={[styles.addButtonText, tabletStyles.addButtonText]}>追加</Text>
         </TouchableOpacity>
       </View>
+      {availableTags.length > 0 && (
+        <View style={[styles.availableTagsContainer, tabletStyles.tagsContainer]}>
+          <Text style={[styles.availableTagsLabel, { color: colors.textTertiary }]}>
+            既存のタグ:
+          </Text>
+          <View style={[styles.tagsContainer, tabletStyles.tagsContainer, { marginTop: 4 }]}>
+            {availableTags.map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.availableTag, { backgroundColor: colors.border }, tabletStyles.tag]}
+                onPress={() => onChange([...tags, tag])}
+                accessibilityLabel={`${tag}を追加`}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.availableTagText, { color: colors.textSecondary }, tabletStyles.tagText]}>
+                  + {tag}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
       {tags.length > 0 && (
         <View style={[styles.tagsContainer, tabletStyles.tagsContainer]}>
           {tags.map(tag => (
@@ -162,5 +188,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     lineHeight: 18,
+  },
+  availableTagsContainer: {
+    marginTop: 12,
+  },
+  availableTagsLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  availableTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    minHeight: 32,
+  },
+  availableTagText: {
+    fontSize: 14,
   },
 });

@@ -9,7 +9,6 @@ export { default as BarcodeScanScreen } from './BarcodeScanScreen';
 export { default as BookConfirmScreen } from './BookConfirmScreen';
 export { default as ISBNSearchScreen } from './ISBNSearchScreen';
 export { default as TitleSearchScreen } from './TitleSearchScreen';
-export { default as NotificationSettingsScreen } from './NotificationSettingsScreen';
 export { default as TagManagementScreen } from './TagManagementScreen';
 export { default as TermsOfServiceScreen } from './TermsOfServiceScreen';
 export { default as PrivacyPolicyScreen } from './PrivacyPolicyScreen';

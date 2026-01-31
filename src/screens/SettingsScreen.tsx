@@ -511,7 +511,7 @@ export default function SettingsScreen() {
               ほしい本を表示
             </Text>
             <Text style={[styles.switchDescription, tabletStyles.switchDescription, { color: colors.textTertiary }]}>
-              「ほしい」ステータスの本を本棚に表示
+              購入予定・欲しい本リストを表示
             </Text>
           </View>
           <Switch
@@ -528,7 +528,7 @@ export default function SettingsScreen() {
               解放した本を表示
             </Text>
             <Text style={[styles.switchDescription, tabletStyles.switchDescription, { color: colors.textTertiary }]}>
-              「解放」ステータスの本を本棚に表示
+              売却・譲渡など手放した本を表示
             </Text>
           </View>
           <Switch
@@ -556,27 +556,6 @@ export default function SettingsScreen() {
             style={isTablet ? { transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] } : undefined}
           />
         </View>
-      </View>
-
-      <View style={[styles.section, themedStyles.section, tabletStyles.section]}>
-        <Text style={[styles.sectionTitle, themedStyles.sectionTitle, tabletStyles.sectionTitle]}>通知</Text>
-
-        <TouchableOpacity
-          style={[styles.menuItem, tabletStyles.menuItem, themedStyles.menuBorder]}
-          onPress={() => navigation.navigate('NotificationSettings')}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.menuIcon, tabletStyles.menuIcon, themedStyles.menuIcon]}>
-            <Text style={[styles.menuIconText, tabletStyles.menuIconText]}>🔔</Text>
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={[styles.menuLabel, tabletStyles.menuLabel, themedStyles.menuLabel]}>通知設定</Text>
-            <Text style={[styles.menuDescription, tabletStyles.menuDescription, themedStyles.menuDescription]}>
-              読書リマインダーの設定
-            </Text>
-          </View>
-          <Text style={[styles.menuArrow, tabletStyles.menuArrow, themedStyles.menuArrow]}>›</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={[styles.section, themedStyles.section, tabletStyles.section]}>

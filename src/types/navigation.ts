@@ -12,7 +12,6 @@ export type RootStackParamList = {
   BookConfirm: { bookInfo: BookInfo };
   ISBNSearch: undefined;
   TitleSearch: undefined;
-  NotificationSettings: undefined;
   TagManagement: undefined;
   TermsOfService: undefined;
   PrivacyPolicy: undefined;

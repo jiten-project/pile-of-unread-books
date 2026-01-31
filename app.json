@@ -2,7 +2,7 @@
   "expo": {
     "name": "積読本管理",
     "slug": "pile-of-unread-books",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "platforms": ["ios", "android"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
