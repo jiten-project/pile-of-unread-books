@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -66,11 +66,24 @@ export default function BookEditScreen() {
   const route = useRoute<BookEditRouteProp>();
   const navigation = useNavigation<RootStackNavigationProp>();
   const { bookId } = route.params;
-  const { getBookById } = useBookStore();
+  const { getBookById, books } = useBookStore();
   const { updateBook } = usePersistBook();
   const { colors } = useTheme();
 
   const book = getBookById(bookId);
+
+  // 既存タグを使用回数順で取得
+  const allTags = useMemo(() => {
+    const tagCount = new Map<string, number>();
+    books.forEach(b => {
+      b.tags.forEach(tag => {
+        tagCount.set(tag, (tagCount.get(tag) || 0) + 1);
+      });
+    });
+    return Array.from(tagCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag);
+  }, [books]);
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -329,6 +342,7 @@ export default function BookEditScreen() {
           label="タグ"
           tags={formData.tags}
           onChange={tags => updateField('tags', tags)}
+          allTags={allTags}
         />
 
         <FormInput

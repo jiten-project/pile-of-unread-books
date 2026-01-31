@@ -104,18 +104,9 @@ export default function DisclaimerScreen() {
         </Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-          7. 通知機能
-        </Text>
-        <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-          本アプリの通知機能は、デバイスの設定やOSの制限により、意図したとおりに動作しない場合があります。重要な予定の管理には、他の手段と併用することをお勧めします。
-        </Text>
-      </View>
-
       <View style={[styles.section, styles.lastSection]}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-          8. 免責事項の変更
+          7. 免責事項の変更
         </Text>
         <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
           本免責事項は、必要に応じて変更される場合があります。変更後も本アプリを継続して使用することにより、変更後の免責事項に同意したものとみなされます。

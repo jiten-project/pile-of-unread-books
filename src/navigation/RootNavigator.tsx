@@ -7,7 +7,6 @@ import {
   BookConfirmScreen,
   ISBNSearchScreen,
   TitleSearchScreen,
-  NotificationSettingsScreen,
   TagManagementScreen,
   TermsOfServiceScreen,
   PrivacyPolicyScreen,
@@ -81,14 +80,6 @@ export default function RootNavigator() {
         component={TitleSearchScreen}
         options={{
           title: 'タイトル検索',
-          headerBackTitle: '戻る',
-        }}
-      />
-      <Stack.Screen
-        name="NotificationSettings"
-        component={NotificationSettingsScreen}
-        options={{
-          title: '通知設定',
           headerBackTitle: '戻る',
         }}
       />

@@ -1,14 +1,7 @@
 {
   "name": "pile-of-unread-books",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "main": "index.ts",
-  "expo": {
-    "install": {
-      "exclude": [
-        "expo-notifications"
-      ]
-    }
-  },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -35,7 +28,6 @@
     "expo-device": "~8.0.10",
     "expo-document-picker": "^14.0.8",
     "expo-file-system": "^19.0.21",
-    "expo-notifications": "^0.31.4",
     "expo-sharing": "^14.0.8",
     "expo-sqlite": "^16.0.10",
     "expo-status-bar": "~3.0.9",

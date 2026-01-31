@@ -90,9 +90,8 @@ export default function BookDetailScreen() {
 
   // 熟成度の計算（積読本のみ）
   const isBookTsundoku = isTsundoku(book.status);
-  const maturityLevel = isBookTsundoku
-    ? getMaturityLevel(calculateTsundokuDays(book.purchaseDate, book.createdAt))
-    : null;
+  const tsundokuDays = calculateTsundokuDays(book.purchaseDate, book.createdAt);
+  const maturityLevel = isBookTsundoku ? getMaturityLevel(tsundokuDays) : null;
 
   const handleStatusChange = async (newStatus: BookStatus) => {
     await updateStatus(book.id, newStatus);
@@ -168,6 +167,11 @@ export default function BookDetailScreen() {
             <View style={[styles.badge, { backgroundColor: STATUS_COLORS[book.status] }, tabletStyles.badge]}>
               <Text style={[styles.badgeText, tabletStyles.badgeText]}>{STATUS_LABELS[book.status]}</Text>
             </View>
+            {isBookTsundoku && (
+              <View style={[styles.badge, { backgroundColor: '#E91E63' }, tabletStyles.badge]}>
+                <Text style={[styles.badgeText, tabletStyles.badgeText]}>{tsundokuDays}日</Text>
+              </View>
+            )}
             <View style={[styles.badge, { backgroundColor: PRIORITY_COLORS[book.priority] }, tabletStyles.badge]}>
               <Text style={[styles.badgeText, tabletStyles.badgeText]}>優先度: {PRIORITY_LABELS[book.priority]}</Text>
             </View>
