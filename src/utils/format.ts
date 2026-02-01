@@ -109,3 +109,28 @@ export function getDaysSince(dateString: string): number {
 export function joinWithComma(items: string[]): string {
   return items.join(', ');
 }
+
+/**
+ * 日付文字列をタイムスタンプ（ミリ秒）に変換
+ * ソートや比較に使用
+ */
+export function getTimestamp(dateString: string | undefined | null): number {
+  if (!dateString) return 0;
+  const time = new Date(dateString).getTime();
+  return isNaN(time) ? 0 : time;
+}
+
+/**
+ * 2つの日付を比較（ソート用）
+ * @returns 負: a < b, 正: a > b, 0: 等しい
+ */
+export function compareDates(
+  a: string | undefined | null,
+  b: string | undefined | null,
+  order: 'asc' | 'desc' = 'asc'
+): number {
+  const timeA = getTimestamp(a);
+  const timeB = getTimestamp(b);
+  const diff = timeA - timeB;
+  return order === 'asc' ? diff : -diff;
+}

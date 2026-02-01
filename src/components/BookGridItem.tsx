@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Book } from '../types';
 import { STATUS_COLORS, STATUS_LABELS, DEVICE } from '../constants';
@@ -9,7 +10,7 @@ interface BookGridItemProps {
   onPress?: () => void;
 }
 
-export default function BookGridItem({ book, onPress }: BookGridItemProps) {
+export default React.memo(function BookGridItem({ book, onPress }: BookGridItemProps) {
   const { isTsundoku } = useSettings();
   const tsundokuDays = getDaysSince(book.purchaseDate || book.createdAt);
   const showTsundokuDays = isTsundoku(book.status);
@@ -18,8 +19,8 @@ export default function BookGridItem({ book, onPress }: BookGridItemProps) {
   const badgeText = showTsundokuDays ? `${tsundokuDays}日` : STATUS_LABELS[book.status];
   const badgeColor = showTsundokuDays ? '#E91E63' : STATUS_COLORS[book.status];
 
-  // iPad用の拡大スタイル
-  const tabletStyles = DEVICE.isTablet ? {
+  // iPad用の拡大スタイル（DEVICEは定数なのでuseMemoは不要だが、明示的にメモ化）
+  const tabletStyles = useMemo(() => DEVICE.isTablet ? {
     container: { marginBottom: 24 },
     imageContainer: { borderRadius: 10 },
     placeholderImage: { padding: 12 },
@@ -28,7 +29,7 @@ export default function BookGridItem({ book, onPress }: BookGridItemProps) {
     badgeText: { fontSize: 14 },
     title: { fontSize: 16, marginTop: 10, lineHeight: 22 },
     author: { fontSize: 14, marginTop: 4 },
-  } : {};
+  } : {}, []);
 
   return (
     <TouchableOpacity style={[styles.container, tabletStyles.container]} onPress={onPress} activeOpacity={0.7}>
@@ -54,7 +55,7 @@ export default function BookGridItem({ book, onPress }: BookGridItemProps) {
       </Text>
     </TouchableOpacity>
   );
-}
+});
 
 // iPadでは4列、iPhoneでは3列
 // 幅 + marginRight の合計が100%以下になるよう調整

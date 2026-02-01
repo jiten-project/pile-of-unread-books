@@ -49,7 +49,7 @@ export default function BookshelfScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<FilterOptions>(defaultFilters);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { books } = useBookStore();
+  const books = useBookStore(state => state.books);
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
   const { showWishlistInBookshelf, showReleasedInBookshelf, isTsundoku } = useSettings();
@@ -283,15 +283,21 @@ export default function BookshelfScreen() {
     }
   };
 
-  const renderListItem = ({ item }: { item: Book }) => (
-    <BookCard book={item} onPress={() => handleBookPress(item.id)} size={DEVICE.isTablet ? 'large' : 'normal'} />
+  const renderListItem = useCallback(
+    ({ item }: { item: Book }) => (
+      <BookCard book={item} onPress={() => handleBookPress(item.id)} size={DEVICE.isTablet ? 'large' : 'normal'} />
+    ),
+    [handleBookPress]
   );
 
-  const renderGridItem = ({ item }: { item: Book }) => (
-    <BookGridItem book={item} onPress={() => handleBookPress(item.id)} />
+  const renderGridItem = useCallback(
+    ({ item }: { item: Book }) => (
+      <BookGridItem book={item} onPress={() => handleBookPress(item.id)} />
+    ),
+    [handleBookPress]
   );
 
-  const themedStyles = {
+  const themedStyles = useMemo(() => ({
     container: { backgroundColor: colors.background },
     searchContainer: { backgroundColor: colors.surface, borderBottomColor: colors.border },
     searchInputWrapper: { backgroundColor: colors.background },
@@ -301,10 +307,10 @@ export default function BookshelfScreen() {
     filterText: { color: colors.textSecondary },
     countText: { color: colors.textSecondary },
     viewButton: { backgroundColor: colors.border },
-  };
+  }), [colors]);
 
-  // iPad用の拡大スタイル
-  const tabletStyles = DEVICE.isTablet ? {
+  // iPad用の拡大スタイル（DEVICEは定数なので初回のみ計算）
+  const tabletStyles = useMemo(() => DEVICE.isTablet ? {
     searchContainer: { padding: 20 },
     searchInputWrapper: { paddingHorizontal: 20, borderRadius: 14 },
     searchIcon: { fontSize: 24, marginRight: 12 },
@@ -317,7 +323,7 @@ export default function BookshelfScreen() {
     countText: { fontSize: 20 },
     viewButton: { paddingHorizontal: 20, paddingVertical: 14 },
     viewIcon: { fontSize: 24 },
-  } : {};
+  } : {}, []);
 
   return (
     <View style={[styles.container, themedStyles.container]}>

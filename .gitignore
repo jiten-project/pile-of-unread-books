@@ -146,12 +146,18 @@ coverage/
 jest-results/
 
 # ===================================
-# Package Manager Locks (optional)
+# AI/MCP Tools
 # ===================================
 
-# Uncomment if you want to ignore lock files
-# package-lock.json
-# yarn.lock
+# Serena
+.serena/
+
+# Claude Code
+.claude/
+
+# MCP config duplicates (macOS copy artifacts)
+.mcp*.json
+!.mcp.json
 
 # ===================================
 # Miscellaneous
@@ -160,17 +166,8 @@ jest-results/
 # Sentry
 .sentryclirc
 
-# Serena (MCP tool cache)
-.serena/
-
-# Claude Code
-.claude/
-
 # Fastlane
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/
 fastlane/test_output/
-
-# Patch files (keep patches directory)
-!patches/

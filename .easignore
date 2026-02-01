@@ -1,45 +1,77 @@
 # EAS Build - Files to ignore during upload
+# These files are excluded to reduce upload size and build time
 
-# Build artifacts
+# ===================================
+# Build Artifacts
+# ===================================
 *.app
 *.ipa
 *.apk
 *.aab
 app.app/
+build/
 
-# Native directories (regenerated during build)
+# ===================================
+# Native Directories
+# ===================================
+# Regenerated during EAS build
 ios/
 android/
 
-# Development files
+# ===================================
+# Development Tools
+# ===================================
 .expo/
 .serena/
 .claude/
+.mcp*.json
 
+# ===================================
+# Editor and IDE
+# ===================================
+.vscode/
+.idea/
+*.iml
+
+# ===================================
 # Documentation
+# ===================================
+# Exclude docs except essential files
 docs/
 *.md
 !README.md
 
-# Editor and IDE
-.vscode/
-.idea/
-
-# Credentials (handled by EAS)
+# ===================================
+# Credentials
+# ===================================
+# Handled by EAS secrets
 credentials/
+eas-credentials/
 
-# OS files
+# ===================================
+# OS Generated
+# ===================================
 .DS_Store
+._*
 Thumbs.db
 
-# Test and coverage
+# ===================================
+# Testing
+# ===================================
 coverage/
-__tests__/
+jest-results/
+**/__tests__/
 
-# Logs
+# ===================================
+# Logs and Cache
+# ===================================
 *.log
 npm-debug.*
+.cache/
+tmp/
 
-# Large unnecessary files
+# ===================================
+# Archives
+# ===================================
 *.zip
 *.tar.gz
