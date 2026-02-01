@@ -70,6 +70,9 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
     ],
+    "moduleNameMapper": {
+      ".*/services/supabase$": "<rootDir>/src/services/__mocks__/supabase.ts"
+    },
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx}",
       "!src/**/*.d.ts",
