@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Book } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS, DEVICE } from '../constants';
@@ -10,7 +11,7 @@ interface BookCardProps {
   size?: 'normal' | 'large';
 }
 
-export default function BookCard({ book, onPress, size = 'normal' }: BookCardProps) {
+export default React.memo(function BookCard({ book, onPress, size = 'normal' }: BookCardProps) {
   // iPadでlargeサイズの場合は拡大
   const isLarge = size === 'large' && DEVICE.isTablet;
   const { colors } = useTheme();
@@ -20,7 +21,7 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
   const tsundokuDays = getDaysSince(book.purchaseDate || book.createdAt);
   const showTsundokuDays = isTsundoku(book.status);
 
-  const themedStyles = {
+  const themedStyles = useMemo(() => ({
     container: { backgroundColor: colors.surface },
     imageContainer: { backgroundColor: colors.borderLight },
     placeholderImage: { backgroundColor: colors.border },
@@ -31,10 +32,10 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
     tagText: { color: colors.primary },
     moreTags: { color: colors.textTertiary },
     purchaseReason: { color: colors.textSecondary },
-  };
+  }), [colors]);
 
   // サイズに応じたスタイル（iPadのlargeサイズ用）
-  const sizeStyles = isLarge ? {
+  const sizeStyles = useMemo(() => isLarge ? {
     container: { padding: 24, marginBottom: 16 },
     imageContainer: { width: 160, height: 240 },
     content: { marginLeft: 20 },
@@ -48,7 +49,7 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
     tagText: { fontSize: 16 },
     purchaseReason: { fontSize: 18, lineHeight: 26, marginTop: 12 },
     placeholderText: { fontSize: 16 },
-  } : {};
+  } : {}, [isLarge]);
 
   return (
     <TouchableOpacity
@@ -109,7 +110,7 @@ export default function BookCard({ book, onPress, size = 'normal' }: BookCardPro
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

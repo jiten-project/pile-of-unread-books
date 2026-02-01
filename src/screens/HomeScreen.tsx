@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View, DimensionValue } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useBookStore } from '../store';
@@ -135,7 +135,7 @@ const TSUNDOKU_MESSAGES = [
 ];
 
 export default function HomeScreen() {
-  const { books } = useBookStore();
+  const books = useBookStore(state => state.books);
   const navigation = useNavigation<AppNavigationProp>();
   const { colors } = useTheme();
   const { showWishlistInBookshelf, showReleasedInBookshelf } = useSettings();
@@ -364,7 +364,7 @@ interface StatCardProps {
   cardWidth?: DimensionValue;
 }
 
-function StatCard({ label, value, color, icon, cardBgColor, textColor, labelColor, cardWidth }: StatCardProps) {
+const StatCard = React.memo(function StatCard({ label, value, color, icon, cardBgColor, textColor, labelColor, cardWidth }: StatCardProps) {
   return (
     <View style={[styles.statCard, { borderLeftColor: color, backgroundColor: cardBgColor, width: cardWidth }]}>
       <Text style={styles.statIcon}>{icon}</Text>
@@ -372,7 +372,7 @@ function StatCard({ label, value, color, icon, cardBgColor, textColor, labelColo
       <Text style={[styles.statLabel, { color: labelColor }]}>{label}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
