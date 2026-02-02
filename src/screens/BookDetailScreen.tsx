@@ -13,7 +13,7 @@ import { useBookStore } from '../store';
 import { usePersistBook } from '../hooks';
 import { BookStatus, RootStackNavigationProp, BookDetailRouteProp } from '../types';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS, CONDITION_LABELS, CONDITION_COLORS, DEVICE } from '../constants';
-import { formatDate, formatPrice, formatPublishedDate, joinWithComma, getMaturityLevel, calculateTsundokuDays } from '../utils';
+import { formatDate, formatPrice, formatPublishedDate, joinWithComma, getMaturityLevel, getDaysSince } from '../utils';
 import { useTheme, useSettings } from '../contexts';
 
 export default function BookDetailScreen() {
@@ -90,7 +90,7 @@ export default function BookDetailScreen() {
 
   // 熟成度の計算（積読本のみ）
   const isBookTsundoku = isTsundoku(book.status);
-  const tsundokuDays = calculateTsundokuDays(book.purchaseDate, book.createdAt);
+  const tsundokuDays = getDaysSince(book.purchaseDate || book.createdAt);
   const maturityLevel = isBookTsundoku ? getMaturityLevel(tsundokuDays) : null;
 
   const handleStatusChange = async (newStatus: BookStatus) => {
